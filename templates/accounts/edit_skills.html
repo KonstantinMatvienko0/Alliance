@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card bg-dark text-white">
+                <div class="card-header bg-info text-white">
+                    <i class="fas fa-chart-line me-2"></i> Редактирование навыков: {{ worker.username }}
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        {% for field in form %}
+                            <div class="mb-3">
+                                <label class="form-label">{{ field.label }}</label>
+                                {{ field }}
+                                <div class="form-text text-muted">Оценка от 1 до 10</div>
+                            </div>
+                        {% endfor %}
+                        <div class="d-flex justify-content-between mt-3">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save me-1"></i> Сохранить навыки
+                            </button>
+                            <a href="{% url 'worker_profile' worker.username %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-1"></i> Отмена
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

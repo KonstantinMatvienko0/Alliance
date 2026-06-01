@@ -1,0 +1,197 @@
+{% extends 'manager/base_manager.html' %}
+{% load static %}
+
+{% block title %}Сотрудники — Alliance{% endblock %}
+{% block nav_workers %}wa-subnav__link--active{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/manager-dashboard.css' %}">
+<link rel="stylesheet" href="{% static 'css/manager-people.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="mg-page mg-people-page">
+    <header class="mg-people-hero">
+        <div>
+            <h1 class="mg-people-hero__title">Сотрудники</h1>
+            <p class="mg-people-hero__sub">Кадровый резерв, навыки, статус работы и соответствие задачам</p>
+        </div>
+    </header>
+
+    <div class="mg-people-stats">
+        <div class="mg-people-stat">
+            <span class="mg-people-stat__label">Всего сотрудников</span>
+            <span class="mg-people-stat__value">{{ stats.total }}</span>
+        </div>
+        <div class="mg-people-stat">
+            <span class="mg-people-stat__label">Средний рейтинг</span>
+            <span class="mg-people-stat__value mg-people-stat__value--accent">{{ stats.avg_rating }}</span>
+        </div>
+        <div class="mg-people-stat">
+            <span class="mg-people-stat__label">Сейчас работают</span>
+            <span class="mg-people-stat__value">{{ stats.working_now }}</span>
+            <span class="mg-people-stat__meta">по таймеру</span>
+        </div>
+        <div class="mg-people-stat">
+            <span class="mg-people-stat__label">Без команды</span>
+            <span class="mg-people-stat__value">{{ stats.unassigned }}</span>
+            {% if top_worker %}
+            <span class="mg-people-stat__meta">Лидер: {{ top_worker.full_name|default:top_worker.username }} ({{ top_worker.rating }})</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <form class="mg-people-toolbar" method="get" action="{% url 'manager_workers' %}">
+        <div class="mg-people-toolbar__search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="search" name="q" placeholder="Поиск по имени, email, специализации…" value="{{ query }}">
+        </div>
+        <button
+            type="button"
+            class="mg-people-chip wa-filter-trigger {% if skill_id or type_filter or team_filter or unassigned_only %}wa-filter-trigger--active{% endif %}"
+            data-fmodal-open="workers-filters"
+        >
+            <span class="mg-filter-btn__plus">+</span> Фильтры
+        </button>
+        {% if unassigned_only %}
+        <a href="{% url 'manager_workers' %}?q={{ query|urlencode }}" class="mg-people-chip mg-people-chip--ghost">Сбросить «без команды»</a>
+        {% else %}
+        <a href="?unassigned=1{% if query %}&q={{ query|urlencode }}{% endif %}" class="mg-people-chip mg-people-chip--ghost">Только без команды</a>
+        {% endif %}
+        {% if skill_id %}
+        <span class="wa-filter-tag">Фильтр по навыку активен</span>
+        {% endif %}
+        {% if type_filter %}
+        <span class="wa-filter-tag">Соответствие: {{ type_filter }}</span>
+        {% endif %}
+    </form>
+
+    <div class="mg-people-grid">
+        {% for row in worker_rows %}
+        <article class="mg-worker-card">
+            <a href="{% url 'worker_profile' row.worker.username %}" class="mg-worker-card__link">
+            <div class="mg-worker-card__head">
+                <div class="mg-worker-card__avatar"><i class="fa-solid fa-user"></i></div>
+                <div class="mg-worker-card__info">
+                    <h2 class="mg-worker-card__name">{{ row.worker.full_name|default:row.worker.username }}</h2>
+                    <p class="mg-worker-card__username">@{{ row.worker.username }}</p>
+                </div>
+                <span class="mg-worker-card__rating {% if row.worker.rating < 0 %}mg-worker-card__rating--neg{% endif %}">
+                    {{ row.worker.rating }}
+                </span>
+            </div>
+
+            <div class="mg-worker-card__badges">
+                {% if row.is_working %}
+                <span class="mg-people-badge mg-people-badge--on"><i class="fa-solid fa-circle" style="font-size:0.4rem"></i> Работает</span>
+                {% endif %}
+                {% for t in row.worker.teams.all %}
+                <span class="mg-people-badge mg-people-badge--team">{{ t.name }}</span>
+                {% empty %}
+                <span class="mg-people-badge">Без команды</span>
+                {% endfor %}
+                {% if row.worker.specialization %}
+                <span class="mg-people-badge">{{ row.worker.specialization }}</span>
+                {% endif %}
+                {% if row.match_score is not None %}
+                <span class="mg-people-badge mg-people-badge--match">{{ row.match_score }}% соответствие</span>
+                {% endif %}
+            </div>
+
+            <div class="mg-bar-row">
+                <div class="mg-bar-row__top">
+                    <span>Командная работа</span>
+                    <span>{{ row.worker.collaboration_score|floatformat:1 }}/10</span>
+                </div>
+                <div class="mg-bar-row__track">
+                    <div class="mg-bar-row__fill" style="width: {% widthratio row.worker.collaboration_score 10 100 %}%;"></div>
+                </div>
+            </div>
+            <div class="mg-bar-row">
+                <div class="mg-bar-row__top">
+                    <span>Надёжность</span>
+                    <span>{{ row.worker.reliability_score|floatformat:1 }}/10</span>
+                </div>
+                <div class="mg-bar-row__track">
+                    <div class="mg-bar-row__fill" style="width: {% widthratio row.worker.reliability_score 10 100 %}%;"></div>
+                </div>
+            </div>
+
+            {% if row.top_skills %}
+            <div class="mg-worker-card__skills">
+                {% for name, val in row.top_skills %}
+                <span class="mg-skill-tag">{{ name }} {{ val }}</span>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="mg-worker-card__foot">
+                <span><strong>{{ row.open_tasks }}</strong> открыто · <strong>{{ row.done_tasks }}</strong> завершено</span>
+                <span>Сегодня {{ row.today_display }}</span>
+            </div>
+            </a>
+            <div class="mg-worker-card__actions">
+                <a href="{% url 'manager_tasks' %}?create=1&amp;assign_worker={{ row.worker.pk }}" class="mg-btn-create mg-btn-create--card">
+                    <i class="fa-solid fa-plus"></i> Добавить задачу
+                </a>
+                <a href="{% url 'worker_profile' row.worker.username %}" class="mg-btn-ghost">Профиль</a>
+            </div>
+        </article>
+        {% empty %}
+        <div class="mg-people-empty">
+            <div><i class="fa-solid fa-users-slash"></i></div>
+            <p>Нет сотрудников по выбранным фильтрам.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block modals %}
+<div class="wa-fmodal" id="workers-filters" role="dialog" aria-modal="true" aria-labelledby="workers-filters-title" aria-hidden="true">
+    <div class="wa-fmodal__backdrop" data-fmodal-close></div>
+    <div class="wa-fmodal__box wa-fmodal__box--wide">
+        <header class="wa-fmodal__header">
+            <h3 class="wa-fmodal__title" id="workers-filters-title">Фильтр сотрудников</h3>
+            <button type="button" class="wa-fmodal__close" data-fmodal-close aria-label="Закрыть">&times;</button>
+        </header>
+        <form method="get" action="{% url 'manager_workers' %}" class="wa-fmodal__form">
+            {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+            {% if unassigned_only %}<input type="hidden" name="unassigned" value="1">{% endif %}
+            <div class="wa-fmodal__body">
+                <div class="wa-fmodal__group">
+                    <div class="wa-fmodal__group-title">Навык</div>
+                    <select name="skill_id" class="mg-input">
+                        <option value="">Все навыки</option>
+                        {% for skill in skills %}
+                        <option value="{{ skill.id }}" {% if skill_id == skill.id|stringformat:"s" %}selected{% endif %}>
+                            {{ skill.name }} ({{ skill.get_skill_type_display }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="wa-fmodal__group">
+                    <div class="wa-fmodal__group-title">Минимальный уровень навыка (1–10)</div>
+                    <input type="number" name="min_value" class="mg-input" min="1" max="10" value="{{ min_value|default:5 }}">
+                </div>
+                <div class="wa-fmodal__group">
+                    <div class="wa-fmodal__group-title">Команда</div>
+                    <select name="team" class="mg-input">
+                        <option value="">Любая команда</option>
+                        <option value="none" {% if team_filter == 'none' %}selected{% endif %}>Без команды</option>
+                        {% for t in teams %}
+                        <option value="{{ t.id }}" {% if team_filter == t.id|stringformat:"s" %}selected{% endif %}>{{ t.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% include 'includes/wa_filter_fieldset.html' with group_title='Тип задачи (соответствие %)' field_name='type' choices=type_choices selected=type_filter all_label='Без сортировки по соответствию' %}
+            </div>
+            <footer class="wa-fmodal__footer">
+                <a href="{% url 'manager_workers' %}" class="wa-fmodal__btn wa-fmodal__btn--ghost">Сбросить всё</a>
+                <button type="button" class="wa-fmodal__btn wa-fmodal__btn--ghost" data-fmodal-cancel>Отмена</button>
+                <button type="submit" class="wa-fmodal__btn wa-fmodal__btn--primary">Применить</button>
+            </footer>
+        </form>
+    </div>
+</div>
+{% endblock %}

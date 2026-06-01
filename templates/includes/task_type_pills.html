@@ -1,0 +1,11 @@
+{% load task_ui %}
+<div class="wa-type-pills">
+    {% for type_code in task.types %}
+    <span class="mg-type-pill" title="{{ type_code }}">
+        <i class="fa-solid {{ type_code|task_type_icon }}" aria-hidden="true"></i>
+        {{ type_code }}
+    </span>
+    {% empty %}
+    <span class="mg-type-pill">—</span>
+    {% endfor %}
+</div>

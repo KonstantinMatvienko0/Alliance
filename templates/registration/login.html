@@ -1,0 +1,72 @@
+{% extends 'registration/base_auth.html' %}
+{% load static %}
+
+{% block title %}Вход — Alliance{% endblock %}
+
+{% block content %}
+<div class="auth-shell">
+    <header class="auth-brand">
+        <img src="{% static 'img/alliance-logo.png' %}" alt="Alliance" class="auth-logo" width="48" height="48">
+        <h1 class="auth-heading">Alliance</h1>
+    </header>
+
+    <div class="auth-card">
+        <h2 class="auth-card__title">Вход в аккаунт</h2>
+        <p class="auth-card__subtitle">Введите email для входа в аккаунт</p>
+
+        {% if form.non_field_errors %}
+        <div class="auth-form-errors">{{ form.non_field_errors }}</div>
+        {% elif form.errors %}
+        <div class="auth-form-errors">
+            <ul>
+                {% for field in form %}
+                    {% for error in field.errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <form method="post" class="auth-form" novalidate>
+            {% csrf_token %}
+            <div class="auth-field">
+                <label class="auth-field__label" for="id_username">Email</label>
+                <input
+                    type="text"
+                    name="username"
+                    id="id_username"
+                    class="auth-input"
+                    placeholder="m@example.com"
+                    autocomplete="username"
+                    required
+                    value="{{ form.username.value|default:'' }}"
+                >
+            </div>
+
+            <div class="auth-field">
+                <div class="auth-field__label-row">
+                    <label class="auth-field__label" for="id_password">Пароль</label>
+                    <a href="#" class="auth-field__link">Забыли пароль?</a>
+                </div>
+                <input
+                    type="password"
+                    name="password"
+                    id="id_password"
+                    class="auth-input"
+                    autocomplete="current-password"
+                    required
+                >
+            </div>
+
+            <button type="submit" class="auth-btn auth-btn--primary">Войти</button>
+            <button type="button" class="auth-btn auth-btn--google">Войти через Google</button>
+        </form>
+
+        <p class="auth-footer">
+            Нет аккаунта?
+            <a href="{% url 'register' %}" class="auth-footer__link">Регистрация</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

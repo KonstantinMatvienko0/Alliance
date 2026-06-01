@@ -1,0 +1,29 @@
+<section class="ch-card ch-personal">
+            <h2 class="ch-card__title">Личная информация</h2>
+            <div class="ch-rows">
+                <div class="ch-row">
+                    <span class="ch-row__label">Полное имя</span>
+                    <span class="ch-row__value">test2</span>
+                </div>
+                <div class="ch-row">
+                    <span class="ch-row__label">Email</span>
+                    <span class="ch-row__value">test2@gmail.com</span>
+                </div>
+                <div class="ch-row">
+                    <span class="ch-row__label">Телефон</span>
+                    <span class="ch-row__value">+7 (123) 456-78-90</span>
+                </div>
+                <div class="ch-row">
+                    <span class="ch-row__label">Адрес</span>
+                    <span class="ch-row__value">
+                        —
+                    </span>
+                </div>
+                <div class="ch-row">
+                    <span class="ch-row__label">Команда</span>
+                    <span class="ch-row__value">
+                        teamTest1
+                    </span>
+                </div>
+            </div>
+        </section>

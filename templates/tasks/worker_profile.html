@@ -1,0 +1,31 @@
+{% extends is_manager_view|yesno:"manager/base_manager.html,worker/base_worker.html" %}
+{% load static %}
+
+{% block title %}
+{% if is_manager_view %}{{ worker.full_name|default:worker.username }} — Сотрудник — Alliance
+{% elif is_viewing_other %}{{ worker.full_name|default:worker.username }} — Alliance
+{% else %}Характеристики — Alliance{% endif %}
+{% endblock %}
+
+{% block nav_workers %}{% if is_manager_view %}wa-subnav__link--active{% endif %}{% endblock %}
+{% block nav_characteristics %}{% if is_own_profile %}wa-subnav__link--active{% endif %}{% endblock %}
+{% block nav_team %}{% if is_viewing_other %}wa-subnav__link--active{% endif %}{% endblock %}
+{% block nav_tasks %}{% endblock %}
+{% block body_class %}{% if is_manager_view %}mg-page--worker-profile{% endif %}{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/characteristics.css' %}">
+{% if is_manager_view %}
+<link rel="stylesheet" href="{% static 'css/manager-people.css' %}">
+{% endif %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+{% include 'includes/worker_profile_content.html' %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/skills-radar.js' %}"></script>
+<script>initSkillsRadar();</script>
+{% endblock %}

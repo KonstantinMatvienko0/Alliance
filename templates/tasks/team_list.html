@@ -1,0 +1,139 @@
+{% extends 'manager/base_manager.html' %}
+{% load static %}
+
+{% block title %}Команды — Alliance{% endblock %}
+{% block nav_teams %}wa-subnav__link--active{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/manager-dashboard.css' %}">
+<link rel="stylesheet" href="{% static 'css/manager-people.css' %}">
+<link rel="stylesheet" href="{% static 'css/task-detail-modal.css' %}">
+<link rel="stylesheet" href="{% static 'css/team-detail-modal.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="mg-page mg-people-page">
+    <header class="mg-people-hero">
+        <div>
+            <h1 class="mg-people-hero__title">Команды</h1>
+            <p class="mg-people-hero__sub">Отряды, метрики синергии и общая нагрузка</p>
+        </div>
+        <a href="{% url 'team_create' %}" class="mg-btn-create">
+            <i class="fa-solid fa-plus"></i> Создать команду
+        </a>
+    </header>
+
+    <div class="mg-people-stats">
+        <div class="mg-people-stat">
+            <span class="mg-people-stat__label">Команды</span>
+            <span class="mg-people-stat__value">{{ stats.total }}</span>
+        </div>
+        <div class="mg-people-stat">
+            <span class="mg-people-stat__label">Участников</span>
+            <span class="mg-people-stat__value mg-people-stat__value--accent">{{ stats.members }}</span>
+        </div>
+        <div class="mg-people-stat">
+            <span class="mg-people-stat__label">Открытых командных задач</span>
+            <span class="mg-people-stat__value">{{ stats.open_tasks }}</span>
+        </div>
+        <div class="mg-people-stat">
+            <span class="mg-people-stat__label">Подсказка</span>
+            <span class="mg-people-stat__meta" style="margin-top:0.35rem;line-height:1.4">Выше синергия → лучше рекомендации при назначении командных задач</span>
+        </div>
+    </div>
+
+    <form class="mg-people-toolbar" method="get" action="{% url 'team_list' %}">
+        <div class="mg-people-toolbar__search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="search" name="q" placeholder="Поиск команд…" value="{{ query }}">
+        </div>
+    </form>
+
+    <div class="mg-people-grid">
+        {% for item in teams_data %}
+        <article class="mg-team-card mg-team-card--openable" data-team-id="{{ item.team.id }}" role="button" aria-label="Открыть команду {{ item.team.name }}">
+            <div class="mg-team-card__head">
+                <div class="mg-team-card__head-main">
+                    <h2 class="mg-team-card__name">
+                        <span>{{ item.team.name }}</span>
+                    </h2>
+                    <p class="mg-team-card__desc">{{ item.description|default:"Описание пока не добавлено." }}</p>
+                </div>
+                <div class="mg-team-card__head-actions">
+                    <a href="{% url 'manager_tasks' %}?create=1&amp;assign_team={{ item.team.id }}" class="mg-btn-icon" title="Добавить задачу">
+                        <i class="fa-solid fa-plus"></i>
+                    </a>
+                    <span class="mg-priority-pill mg-priority-pill--{% if item.priority == 'High' %}high{% elif item.priority == 'Medium' %}medium{% else %}low{% endif %}">
+                        {{ item.priority }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="mg-team-card__body">
+                <div class="mg-team-card__stats">
+                    <div class="mg-metric-mini">
+                        <span class="mg-metric-mini__label">Участники</span>
+                        <span class="mg-metric-mini__value">{{ item.members_count }}</span>
+                    </div>
+                    <div class="mg-metric-mini">
+                        <span class="mg-metric-mini__label">Синергия</span>
+                        <span class="mg-metric-mini__value">{{ item.team.synergy_score|floatformat:1 }}</span>
+                    </div>
+                    <div class="mg-metric-mini">
+                        <span class="mg-metric-mini__label">Сплочённость</span>
+                        <span class="mg-metric-mini__value">{{ item.team.cohesion_score|floatformat:1 }}</span>
+                    </div>
+                </div>
+
+                <div class="mg-team-card__stats">
+                    <div class="mg-metric-mini">
+                        <span class="mg-metric-mini__label">Рейтинг команды</span>
+                        <span class="mg-metric-mini__value mg-people-stat__value--accent">{{ item.total_rating }}</span>
+                    </div>
+                    <div class="mg-metric-mini">
+                        <span class="mg-metric-mini__label">Открытые задачи</span>
+                        <span class="mg-metric-mini__value">{{ item.tasks_open }}</span>
+                    </div>
+                    <div class="mg-metric-mini">
+                        <span class="mg-metric-mini__label">Все задачи</span>
+                        <span class="mg-metric-mini__value">{{ item.tasks_total }}</span>
+                    </div>
+                </div>
+
+                {% if item.task_types %}
+                <div class="mg-team-card__types">
+                    {% for t in item.task_types %}
+                    <span class="mg-type-chip">{{ t }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="mg-team-card__actions">
+                <button type="button" class="mg-btn-ghost" data-team-open="{{ item.team.id }}">
+                    <i class="fa-solid fa-arrow-right"></i> Открыть
+                </button>
+                <a href="{% url 'team_edit' item.team.id %}" class="mg-btn-ghost">
+                    <i class="fa-solid fa-pen"></i> Редактировать
+                </a>
+            </div>
+        </article>
+        {% empty %}
+        <div class="mg-people-empty">
+            <div><i class="fa-solid fa-people-group"></i></div>
+            <p>Команд пока нет. Создайте первый отряд.</p>
+            <a href="{% url 'team_create' %}" class="mg-btn-create mg-btn-create--sm" style="margin-top:1rem">
+                <i class="fa-solid fa-plus"></i> Создать команду
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{{ teams_detail_map|json_script:"mg-teams-detail-data" }}
+{% include 'includes/mg_team_detail_modal.html' %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/team-detail-modal.js' %}"></script>
+{% endblock %}

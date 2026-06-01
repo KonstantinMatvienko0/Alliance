@@ -1,0 +1,212 @@
+{% extends 'worker/base_worker.html' %}
+{% load static task_ui %}
+
+{% block title %}Задачи — Alliance{% endblock %}
+{% block nav_tasks %}wa-subnav__link--active{% endblock %}
+{% block nav_home %}{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/task-detail-modal.css' %}">
+{% endblock %}
+
+{% block content %}
+{% if overdue_count %}
+<div class="wa-alert-banner">
+    {{ overdue_count }} просроченных задач. Запустите <code>python manage.py mark_overdue_tasks</code> или завершите их через меню действий.
+</div>
+{% endif %}
+
+<section class="wa-panel">
+    <div class="wa-toolbar">
+        <form class="wa-toolbar__search" method="get" action="">
+            <input type="search" name="q" placeholder="Фильтр задач..." value="{{ query }}">
+            {% if status_filter %}<input type="hidden" name="status" value="{{ status_filter }}">{% endif %}
+            {% if priority_filter %}<input type="hidden" name="priority" value="{{ priority_filter }}">{% endif %}
+            {% include 'includes/query_type_hidden.html' with type_filters=type_filters only %}
+            <input type="hidden" name="per_page" value="{{ per_page }}">
+        </form>
+
+        <button
+            type="button"
+            class="wa-chip wa-filter-trigger {% if status_filter or priority_filter or type_filters %}wa-filter-trigger--active{% endif %}"
+            data-fmodal-open="worker-task-filters"
+            aria-haspopup="dialog"
+        >
+            <span class="wa-chip__plus">+</span> Фильтры
+        </button>
+
+        <div class="wa-filter-tags">
+            {% if status_filter %}
+            <span class="wa-filter-tag">
+                Статус:
+                {% for value, label in status_choices %}{% if status_filter == value %}{{ label }}{% endif %}{% endfor %}
+            </span>
+            {% endif %}
+            {% if priority_filter %}
+            <span class="wa-filter-tag">Приоритет: {{ priority_filter }}</span>
+            {% endif %}
+            {% for type_code in type_filters %}
+            <span class="wa-filter-tag">Тип: {{ type_code }}</span>
+            {% endfor %}
+        </div>
+
+        <div class="wa-toolbar__actions">
+            <button
+                type="button"
+                class="wa-btn wa-btn--white {% if status_filter or priority_filter or type_filters %}wa-filter-trigger--active{% endif %}"
+                title="Настройки отображения"
+                data-fmodal-open="worker-task-filters"
+                aria-haspopup="dialog"
+            ><i class="fa-solid fa-sliders"></i> Вид</button>
+        </div>
+    </div>
+
+    <div class="wa-table-wrap">
+        <table class="wa-table" id="wa-task-table">
+            <thead>
+                <tr>
+                    <th style="width:40px"><input type="checkbox" class="wa-check" id="wa-check-all" aria-label="Выбрать все"></th>
+                    <th>Задача</th>
+                    <th>Название <i class="fa-solid fa-sort"></i></th>
+                    <th>Тип <i class="fa-solid fa-sort"></i></th>
+                    <th>Статус <i class="fa-solid fa-sort"></i></th>
+                    <th>Приоритет <i class="fa-solid fa-sort"></i></th>
+                    <th style="width:48px"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for task in page_obj %}
+                <tr class="wa-task-row--openable" data-task-id="{{ task.pk }}" role="button" aria-label="Открыть {{ task.task_code }}">
+                    <td><input type="checkbox" class="wa-check" aria-label="Выбрать {{ task.task_code }}"></td>
+                    <td class="wa-task-id">{{ task.task_code }}</td>
+                    <td>
+                        <span class="wa-title-cell__type">{{ task.title }}</span>
+                        {% if task.description %}
+                        <span class="wa-title-cell__desc">{{ task.description|truncatechars:80 }}</span>
+                        {% endif %}
+                        {% if task.team %}<span class="wa-title-cell__meta">Команда: {{ task.team.name }}</span>{% endif %}
+                        {% if task.is_overdue %}<span class="wa-badge-overdue">Просрочено</span>{% endif %}
+                    </td>
+                    <td class="wa-cell-types">
+                        {% include 'includes/task_type_pills.html' with task=task only %}
+                    </td>
+                    <td>
+                        <span class="wa-cell-status">
+                            <i class="fa-solid {{ task.status|status_icon }}"></i>
+                            {{ task.status_ui_label }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="wa-cell-priority">
+                            <i class="fa-solid {{ task.priority_label|priority_icon }}"></i>
+                            {{ task.priority_label }}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="wa-actions">
+                            <button type="button" class="wa-actions__toggle" aria-label="Действия"><i class="fa-solid fa-ellipsis"></i></button>
+                            <div class="wa-actions__menu">
+                                {% if task.status == 'open' %}
+                                <form action="{% url 'start_task' task.id %}" method="post">
+                                    {% csrf_token %}
+                                    <button type="submit" class="wa-actions__item">Начать задачу</button>
+                                </form>
+                                {% endif %}
+                                {% if task.status == 'open' or task.status == 'in_progress' %}
+                                <form action="{% url 'complete_task' task.id %}" method="post">
+                                    {% csrf_token %}
+                                    <button type="submit" class="wa-actions__item">Завершить</button>
+                                </form>
+                                {% endif %}
+                                <a href="{% url 'worker_profile' user.username %}" class="wa-actions__item">Мой профиль</a>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="wa-empty">Нет назначенных задач.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="wa-fmodal" id="worker-task-filters" role="dialog" aria-modal="true" aria-labelledby="worker-task-filters-title" aria-hidden="true">
+        <div class="wa-fmodal__backdrop" data-fmodal-close></div>
+        <div class="wa-fmodal__box">
+            <header class="wa-fmodal__header">
+                <h3 class="wa-fmodal__title" id="worker-task-filters-title">Фильтры</h3>
+                <button type="button" class="wa-fmodal__close" data-fmodal-close aria-label="Закрыть">&times;</button>
+            </header>
+            <form method="get" class="wa-fmodal__form">
+                <input type="hidden" name="q" value="{{ query }}">
+                <input type="hidden" name="per_page" value="{{ per_page }}">
+                <div class="wa-fmodal__body">
+                    {% include 'includes/wa_filter_fieldset.html' with group_title='Статус' field_name='status' selected=status_filter choices=status_choices only %}
+                    {% include 'includes/wa_filter_fieldset_multi.html' with group_title='Тип' field_name='type' selected=type_filters choices=type_choices hint='Выберите один или несколько типов' only %}
+                    {% include 'includes/wa_filter_fieldset.html' with group_title='Приоритет' field_name='priority' selected=priority_filter choices=priority_filter_choices only %}
+                </div>
+                <footer class="wa-fmodal__footer">
+                    <button type="button" class="wa-fmodal__btn wa-fmodal__btn--ghost" data-fmodal-clear>Сбросить</button>
+                    <button type="button" class="wa-fmodal__btn wa-fmodal__btn--ghost" data-fmodal-cancel>Отмена</button>
+                    <button type="submit" class="wa-fmodal__btn wa-fmodal__btn--primary">Применить</button>
+                </footer>
+            </form>
+        </div>
+    </div>
+
+    <footer class="wa-footer">
+        <span><span id="wa-selected-count">0</span> из {{ page_obj.paginator.count }} строк выбрано.</span>
+        <div class="wa-footer__right">
+            <form method="get" class="d-flex align-items-center gap-2" style="display:flex;align-items:center;gap:0.5rem;">
+                <input type="hidden" name="q" value="{{ query }}">
+                <input type="hidden" name="status" value="{{ status_filter }}">
+                <input type="hidden" name="priority" value="{{ priority_filter }}">
+                {% include 'includes/query_type_hidden.html' with type_filters=type_filters only %}
+                <label>Строк на странице</label>
+                <select name="per_page" onchange="this.form.submit()">
+                    <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
+                    <option value="20" {% if per_page == 20 %}selected{% endif %}>20</option>
+                    <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
+                </select>
+            </form>
+            <span>Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages|default:1 }}</span>
+            <nav class="wa-pagination" aria-label="Пагинация">
+                {% if page_obj.has_previous %}
+                <a href="?page=1&q={{ query }}&status={{ status_filter }}&priority={{ priority_filter }}&per_page={{ per_page }}{% for t in type_filters %}&type={{ t }}{% endfor %}" aria-label="Первая"><i class="fa-solid fa-angles-left"></i></a>
+                <a href="?page={{ page_obj.previous_page_number }}&q={{ query }}&status={{ status_filter }}&priority={{ priority_filter }}&per_page={{ per_page }}{% for t in type_filters %}&type={{ t }}{% endfor %}" aria-label="Предыдущая"><i class="fa-solid fa-angle-left"></i></a>
+                {% else %}
+                <span class="disabled"><i class="fa-solid fa-angles-left"></i></span>
+                <span class="disabled"><i class="fa-solid fa-angle-left"></i></span>
+                {% endif %}
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}&q={{ query }}&status={{ status_filter }}&priority={{ priority_filter }}&per_page={{ per_page }}{% for t in type_filters %}&type={{ t }}{% endfor %}" aria-label="Следующая"><i class="fa-solid fa-angle-right"></i></a>
+                <a href="?page={{ page_obj.paginator.num_pages }}&q={{ query }}&status={{ status_filter }}&priority={{ priority_filter }}&per_page={{ per_page }}{% for t in type_filters %}&type={{ t }}{% endfor %}" aria-label="Последняя"><i class="fa-solid fa-angles-right"></i></a>
+                {% else %}
+                <span class="disabled"><i class="fa-solid fa-angle-right"></i></span>
+                <span class="disabled"><i class="fa-solid fa-angles-right"></i></span>
+                {% endif %}
+            </nav>
+        </div>
+    </footer>
+</section>
+
+{{ tasks_detail_map|json_script:"wa-tasks-detail-data" }}
+{% include 'includes/wa_task_detail_modal.html' %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/task-detail-modal.js' %}"></script>
+<script>
+    const checkAll = document.getElementById('wa-check-all');
+    if (checkAll) {
+        checkAll.addEventListener('change', function () {
+            document.querySelectorAll('#wa-task-table .wa-check').forEach(cb => {
+                if (cb !== checkAll) cb.checked = checkAll.checked;
+            });
+            checkAll.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+    }
+</script>
+{% endblock %}

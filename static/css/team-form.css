@@ -1,0 +1,391 @@
+/* Create / edit team form */
+
+.mg-form-page > .mg-back-link {
+    width: fit-content;
+    max-width: 100%;
+}
+
+.mg-form-page__hero {
+    margin-top: 0.85rem;
+}
+
+.mg-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.35rem 0.85rem 0.35rem 0.4rem;
+    border: 1px solid var(--wa-border);
+    border-radius: var(--wa-radius);
+    background: var(--wa-surface);
+    color: var(--wa-text);
+    font-size: var(--wa-font-base);
+    font-weight: var(--wa-weight-medium);
+    text-decoration: none;
+    transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.mg-back-link:hover {
+    border-color: rgba(193, 255, 114, 0.45);
+    background: rgba(193, 255, 114, 0.06);
+    color: var(--wa-text);
+    text-decoration: none;
+}
+
+.mg-back-link__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: var(--wa-surface-2);
+    color: var(--wa-accent);
+    font-size: var(--wa-font-sm);
+    flex-shrink: 0;
+    transition: background 0.15s ease;
+}
+
+.mg-back-link:hover .mg-back-link__icon {
+    background: rgba(193, 255, 114, 0.15);
+}
+
+.mg-back-link__text {
+    line-height: 1.2;
+}
+
+.mg-form-panel {
+    overflow: visible;
+}
+
+.mg-form-panel__hint {
+    margin: -0.35rem 0 1rem;
+    font-size: var(--wa-font-sm);
+    line-height: 1.45;
+    color: var(--wa-muted);
+}
+
+.mg-form-panel__hint--tight {
+    margin: 0.25rem 0 0.65rem;
+}
+
+/* Типы задач на форме команды — чипы, без grid на input */
+.mg-type-options--form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin-top: 0.5rem;
+}
+
+.mg-form-page .mg-type-options--form .mg-type-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    width: auto;
+    min-width: 0;
+    margin: 0;
+    padding: 0.4rem 0.75rem;
+    border: 1px solid var(--wa-border);
+    border-radius: var(--wa-radius);
+    background: var(--wa-surface);
+    font-size: var(--wa-font-sm);
+    font-weight: var(--wa-weight-medium);
+    color: var(--wa-text);
+    cursor: pointer;
+    user-select: none;
+    transition: border-color 0.12s ease, background 0.12s ease, color 0.12s ease;
+}
+
+.mg-form-page .mg-type-options--form .mg-type-option:hover {
+    border-color: #52525b;
+    background: var(--wa-surface-2);
+    transform: none;
+}
+
+.mg-form-page .mg-type-options--form .mg-type-option:has(input:checked) {
+    border-color: rgba(193, 255, 114, 0.55);
+    background: rgba(193, 255, 114, 0.1);
+    color: var(--wa-accent);
+    animation: none;
+}
+
+.mg-form-page .mg-type-options--form .mg-type-option input,
+.mg-form-page .mg-type-options--form .mg-type-option__input {
+    flex-shrink: 0;
+    width: 14px;
+    height: 14px;
+    min-width: 14px;
+    margin: 0;
+    padding: 0;
+    border: 1.5px solid var(--wa-border);
+    border-radius: 3px;
+    background: var(--wa-surface-2);
+    box-shadow: none;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.mg-form-page .mg-type-options--form .mg-type-option input:checked,
+.mg-form-page .mg-type-options--form .mg-type-option__input:checked {
+    border-color: var(--wa-accent);
+    background: var(--wa-accent);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='%2318181b' d='M4.5 9L1.5 6l1-1 2 2 5-5 1 1z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 10px;
+}
+
+.mg-form-page .mg-type-options--form .mg-type-option span {
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.mg-form-page .mg-field--types .mg-filter-bar__label {
+    margin-bottom: 0;
+}
+
+.mg-roster-score {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+    margin-bottom: 0.85rem;
+    padding: 0.65rem 0.85rem;
+    border: 1px solid rgba(193, 255, 114, 0.35);
+    border-radius: var(--wa-radius);
+    background: rgba(193, 255, 114, 0.06);
+}
+
+.mg-roster-score__label {
+    font-size: var(--wa-font-sm);
+    color: var(--wa-muted);
+}
+
+.mg-roster-score__value {
+    font-size: var(--wa-font-lg);
+    font-weight: var(--wa-weight-bold);
+    color: var(--wa-accent);
+}
+
+.mg-roster-score__value--low {
+    color: #f87171;
+}
+
+.mg-roster-score__hint {
+    font-size: var(--wa-font-xs);
+    color: var(--wa-muted);
+}
+
+.mg-member-pick__breakdown,
+.mg-member-pick__velocity {
+    display: block;
+    margin-top: 0.2rem;
+    font-size: var(--wa-font-2xs);
+    color: #71717a;
+    line-height: 1.35;
+}
+
+.mg-filter-bar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.75rem 1rem;
+    align-items: end;
+}
+
+.mg-filter-bar__label {
+    display: block;
+    margin-bottom: 0.4rem;
+    font-size: var(--wa-font-base);
+    font-weight: var(--wa-weight-medium);
+    color: #d4d4d8;
+}
+
+.mg-filter-bar__skill {
+    margin-bottom: 0;
+}
+
+.mg-filter-bar__apply-btn {
+    min-width: 108px;
+    white-space: nowrap;
+}
+
+.mg-filter-bar__reset {
+    margin-top: 0.65rem;
+    font-size: var(--wa-font-base);
+}
+
+/* Multi-skill picker */
+.mg-skill-multi {
+    position: relative;
+}
+
+.mg-skill-multi__trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.65rem;
+    width: 100%;
+    min-height: 40px;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--wa-border);
+    border-radius: var(--wa-radius);
+    background: var(--wa-surface);
+    color: var(--wa-text);
+    font-size: var(--wa-font-base);
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.mg-skill-multi__trigger:hover {
+    border-color: #52525b;
+}
+
+.mg-skill-multi.is-open .mg-skill-multi__trigger,
+.mg-skill-multi__trigger:focus-visible {
+    outline: none;
+    border-color: var(--wa-accent);
+    box-shadow: 0 0 0 2px rgba(193, 255, 114, 0.12);
+}
+
+.mg-skill-multi__value {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mg-skill-multi__chevron {
+    flex-shrink: 0;
+    font-size: var(--wa-font-sm);
+    color: var(--wa-muted);
+    transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.mg-skill-multi.is-open .mg-skill-multi__chevron {
+    transform: rotate(180deg);
+    color: var(--wa-accent);
+}
+
+.mg-skill-multi__menu {
+    position: fixed;
+    z-index: 1300;
+    margin: 0;
+    padding: 0.35rem;
+    max-height: min(300px, 50vh);
+    overflow-y: auto;
+    border: 1px solid var(--wa-border);
+    border-radius: var(--wa-radius);
+    background: var(--wa-surface-2);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+    scrollbar-width: thin;
+    scrollbar-color: var(--wa-border) transparent;
+}
+
+.mg-skill-multi__menu[hidden] {
+    display: none !important;
+}
+
+.mg-skill-multi__item {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.45rem 0.55rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.12s ease;
+}
+
+.mg-skill-multi__item:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.mg-skill-multi__check {
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    appearance: none;
+    -webkit-appearance: none;
+    border: 1.5px solid var(--wa-border);
+    border-radius: 3px;
+    background: var(--wa-surface);
+    cursor: pointer;
+    transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.mg-skill-multi__check:checked {
+    border-color: var(--wa-accent);
+    background: var(--wa-accent);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='%2318181b' d='M4.5 9L1.5 6l1-1 2 2 5-5 1 1z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 11px;
+}
+
+.mg-skill-multi__item-text {
+    font-size: var(--wa-font-base);
+    line-height: 1.35;
+    color: var(--wa-text);
+}
+
+.mg-skill-multi__item:has(.mg-skill-multi__check:checked) .mg-skill-multi__item-text {
+    color: var(--wa-accent);
+    font-weight: 600;
+}
+
+/* Candidates layout */
+.mg-candidates__section + .mg-candidates__section {
+    margin-top: 1.1rem;
+    padding-top: 1.1rem;
+    border-top: 1px solid var(--wa-border);
+}
+
+.mg-candidates__title {
+    margin: 0 0 0.65rem;
+    font-size: var(--wa-font-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--wa-muted);
+}
+
+.mg-candidates__section:first-of-type .mg-candidates__title {
+    color: var(--wa-accent);
+}
+
+.mg-members-grid__loading,
+.mg-members-grid__empty {
+    grid-column: 1 / -1;
+    padding: 1.75rem 1.25rem;
+    text-align: center;
+    font-size: var(--wa-font-base);
+    color: var(--wa-muted);
+    border: 1px dashed var(--wa-border);
+    border-radius: var(--wa-radius);
+    background: rgba(0, 0, 0, 0.15);
+}
+
+.mg-members-grid__loading i {
+    margin-right: 0.35rem;
+    color: var(--wa-accent);
+}
+
+.mg-form-page .mg-filter-bar .mg-field > label {
+    margin-bottom: 0.4rem;
+    font-size: var(--wa-font-base);
+}
+
+@media (max-width: 640px) {
+    .mg-filter-bar {
+        grid-template-columns: 1fr;
+        align-items: stretch;
+    }
+
+    .mg-filter-bar__apply-btn {
+        width: 100%;
+    }
+}

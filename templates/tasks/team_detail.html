@@ -1,0 +1,133 @@
+{% extends 'manager/base_manager.html' %}
+{% load static task_ui %}
+
+{% block title %}{{ team.name }} — Alliance{% endblock %}
+{% block nav_teams %}wa-subnav__link--active{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/manager-dashboard.css' %}">
+<link rel="stylesheet" href="{% static 'css/manager-people.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="mg-page mg-people-page">
+    <a href="{% url 'team_list' %}" class="mg-home__link" style="margin-bottom:0.5rem">
+        <i class="fa-solid fa-arrow-left"></i> Все команды
+    </a>
+
+    <section class="mg-detail-hero">
+        <div>
+            <h1 class="mg-detail-hero__title">{{ team.name }}</h1>
+            <p class="mg-detail-hero__desc">{{ team.description|default:"Нет описания." }}</p>
+            <div class="mg-worker-card__badges" style="margin-top:0.75rem">
+                <span class="mg-priority-pill mg-priority-pill--{% if priority == 'High' %}high{% elif priority == 'Medium' %}medium{% else %}low{% endif %}">{{ priority }} нагрузка</span>
+                {% if team.dominant_task_type %}
+                <span class="mg-people-badge">фокус {{ team.dominant_task_type }}</span>
+                {% endif %}
+                <span class="mg-people-badge">Синергия {{ team.synergy_score|floatformat:1 }}</span>
+                <span class="mg-people-badge">Сплочённость {{ team.cohesion_score|floatformat:1 }}</span>
+            </div>
+        </div>
+        <div class="mg-detail-actions">
+            <a href="{% url 'manager_tasks' %}?create=1&amp;assign_team={{ team.id }}" class="mg-btn-create">
+                <i class="fa-solid fa-plus"></i> Добавить задачу
+            </a>
+            <a href="{% url 'team_edit' team.id %}" class="mg-btn-ghost">
+                <i class="fa-solid fa-pen"></i> Редактировать команду
+            </a>
+            <form action="{% url 'team_delete' team.id %}" method="post" onsubmit="return confirm('Расформировать команду «{{ team.name }}»? Участники будут откреплены.');">
+                {% csrf_token %}
+                <button type="submit" class="mg-btn-ghost mg-btn-ghost--danger">
+                    <i class="fa-solid fa-trash"></i> Расформировать
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <div class="mg-people-stats">
+        <div class="mg-people-stat">
+            <span class="mg-people-stat__label">Участники</span>
+            <span class="mg-people-stat__value">{{ members_count }}</span>
+        </div>
+        <div class="mg-people-stat">
+            <span class="mg-people-stat__label">Суммарный рейтинг</span>
+            <span class="mg-people-stat__value mg-people-stat__value--accent">{{ total_rating }}</span>
+        </div>
+        <div class="mg-people-stat">
+            <span class="mg-people-stat__label">Средний ранг задач</span>
+            <span class="mg-people-stat__value">{{ avg_rank }}</span>
+        </div>
+        <div class="mg-people-stat">
+            <span class="mg-people-stat__label">Итоги задач</span>
+            <span class="mg-people-stat__meta">{{ tasks_open }} открыто · {{ tasks_done }} завершено · {{ tasks_failed }} провал</span>
+        </div>
+    </div>
+
+    <div class="mg-detail-grid">
+        <section class="mg-detail-panel">
+            <div class="mg-detail-panel__head">Участники</div>
+            {% for row in member_rows %}
+            <a href="{% url 'worker_profile' row.member.username %}" class="mg-member-row">
+                <span class="mg-member-row__avatar"><i class="fa-solid fa-user"></i></span>
+                <span class="mg-member-row__main">
+                    <span class="mg-member-row__name">{{ row.member.full_name|default:row.member.username }}</span>
+                    <span class="mg-member-row__meta">
+                        {% if row.is_working %}<span class="mg-people-badge mg-people-badge--on" style="margin-right:0.35rem">Работает</span>{% endif %}
+                        Сегодня {{ row.today_display }}
+                        {% if row.member.specialization %} · {{ row.member.specialization }}{% endif %}
+                    </span>
+                </span>
+                <span class="mg-member-row__rating">{{ row.member.rating }}</span>
+            </a>
+            {% empty %}
+            <p class="wa-empty" style="padding:1.5rem">Нет участников — отредактируйте команду, чтобы добавить сотрудников.</p>
+            {% endfor %}
+        </section>
+
+        <section class="mg-detail-panel">
+            <div class="mg-detail-panel__head">Задачи команды</div>
+            {% for task in recent_tasks %}
+            <div class="mg-task-row">
+                <span class="mg-task-row__code">{{ task.task_code }}</span>
+                <span class="mg-task-row__title">{{ task.title }}</span>
+                {% include 'includes/task_type_pills.html' with task=task only %}
+                <span class="wa-cell-status">
+                    <i class="fa-solid {{ task.status|status_icon }}"></i>
+                    {{ task.status_ui_label }}
+                </span>
+            </div>
+            {% empty %}
+            <p class="wa-empty" style="padding:1.5rem">Команде пока не назначены задачи.</p>
+            {% endfor %}
+            {% if recent_tasks %}
+            <div style="padding:0.75rem 1rem;border-top:1px solid var(--wa-border)">
+                <a href="{% url 'manager_tasks' %}?q={{ team.name|urlencode }}" class="wa-link">Смотреть в списке задач <i class="fa-solid fa-arrow-right"></i></a>
+            </div>
+            {% endif %}
+        </section>
+    </div>
+
+    <section class="wa-panel mg-manager-notes" style="margin-top:0.85rem;padding:1rem 1.25rem">
+        <h2 class="mg-detail-panel__head" style="border:none;padding:0;margin-bottom:0.5rem">Заметка менеджера</h2>
+        <p class="mg-people-stat__meta" style="margin:0 0 0.65rem">Только для менеджеров — сотрудники не видят.</p>
+        <form method="post" action="{% url 'team_save_notes' team.id %}">
+            {% csrf_token %}
+            <textarea name="manager_notes" class="mg-input" rows="4" maxlength="5000" placeholder="Внутренние заметки о команде…">{{ team.manager_notes }}</textarea>
+            <button type="submit" class="mg-btn-ghost" style="margin-top:0.65rem">
+                <i class="fa-solid fa-floppy-disk"></i> Сохранить заметку
+            </button>
+        </form>
+    </section>
+
+    {% if task_types %}
+    <section class="wa-panel" style="margin-top:0.85rem;padding:1rem 1.25rem">
+        <h2 class="mg-detail-panel__head" style="border:none;padding:0;margin-bottom:0.75rem">Состав задач</h2>
+        <div class="mg-team-card__types">
+            {% for t in task_types %}
+            <span class="mg-type-chip">{{ t.label }} ×{{ t.count }}</span>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+</div>
+{% endblock %}

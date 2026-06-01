@@ -1,0 +1,21 @@
+<div class="wa-fmodal__group">
+    {% if group_title %}
+    <div class="wa-fmodal__group-title">{{ group_title }}</div>
+    {% endif %}
+    {% if hint %}
+    <p class="wa-fmodal__group-hint">{{ hint }}</p>
+    {% endif %}
+    <div class="wa-fmodal__options wa-fmodal__options--multi">
+        {% for value, label in choices %}
+        <label class="wa-fmodal__option">
+            <input
+                type="checkbox"
+                name="{{ field_name }}"
+                value="{{ value }}"
+                {% if value in selected %}checked{% endif %}
+            >
+            <span>{{ label }}</span>
+        </label>
+        {% endfor %}
+    </div>
+</div>

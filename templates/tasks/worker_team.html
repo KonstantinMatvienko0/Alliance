@@ -1,0 +1,92 @@
+{% extends 'worker/base_worker.html' %}
+{% load static %}
+
+{% block title %}Команда — Alliance{% endblock %}
+{% block nav_team %}wa-subnav__link--active{% endblock %}
+{% block nav_tasks %}{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/worker-team.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="wt-page">
+    {% if not has_team %}
+    <section class="wt-empty">
+        <div class="wt-empty__glow" aria-hidden="true"></div>
+        <div class="wt-empty__icon"><i class="fa-solid fa-people-group"></i></div>
+        <h1 class="wt-empty__title">Команды не назначены</h1>
+        <p class="wt-empty__text">Когда менеджер добавит вас в отряд, здесь появятся карточки команд и списки участников.</p>
+        <a href="{% url 'dashboard' %}" class="wt-btn wt-btn--ghost">
+            <i class="fa-solid fa-list-check"></i> Перейти к задачам
+        </a>
+    </section>
+    {% else %}
+    <header class="wt-hero">
+        <div class="wt-hero__copy">
+            <span class="wt-hero__eyebrow">Ваши отряды</span>
+            <h1 class="wt-hero__title">Команды</h1>
+            <p class="wt-hero__sub">Вы можете состоять в нескольких командах — у каждой свои задачи и участники.</p>
+        </div>
+        <div class="wt-hero__pill">
+            <i class="fa-solid fa-users"></i>
+            <span>{{ team_items|length }} {% if team_items|length == 1 %}команда{% elif team_items|length < 5 %}команды{% else %}команд{% endif %}</span>
+        </div>
+    </header>
+
+    <div class="wt-squads">
+        {% for item in team_items %}
+        <a href="{% url 'worker_team_detail' item.team.id %}" class="wt-squad">
+            <div class="wt-squad__accent" aria-hidden="true"></div>
+            <div class="wt-squad__body">
+                <div class="wt-squad__brand">
+                    <div class="wt-squad__icon"><i class="fa-solid fa-shield-halved"></i></div>
+                    <div class="wt-squad__intro">
+                        <div class="wt-squad__title-row">
+                            <h2 class="wt-squad__name">{{ item.team.name }}</h2>
+                            <span class="wt-priority wt-priority--{% if item.priority == 'High' %}high{% elif item.priority == 'Medium' %}medium{% else %}low{% endif %}">
+                                {{ item.priority }}
+                            </span>
+                        </div>
+                        <p class="wt-squad__desc">{{ item.description|default:"Общий отряд для совместной работы." }}</p>
+                    </div>
+                </div>
+
+                <div class="wt-squad__metrics">
+                    <div class="wt-metric">
+                        <span class="wt-metric__value">{{ item.members_count }}</span>
+                        <span class="wt-metric__label">Участники</span>
+                    </div>
+                    <div class="wt-metric">
+                        <span class="wt-metric__value wt-metric__value--accent">{{ item.total_rating }}</span>
+                        <span class="wt-metric__label">Рейтинг команды</span>
+                    </div>
+                    <div class="wt-metric">
+                        <span class="wt-metric__value">{{ item.team.synergy_score|floatformat:1 }}</span>
+                        <span class="wt-metric__label">Синергия</span>
+                    </div>
+                    <div class="wt-metric">
+                        <span class="wt-metric__value">{{ item.tasks_open }}</span>
+                        <span class="wt-metric__label">Открытые задачи</span>
+                    </div>
+                </div>
+
+                {% if item.task_types %}
+                <div class="wt-squad__tags">
+                    {% for t in item.task_types %}
+                    <span class="wt-tag">{{ t }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="wt-squad__cta">
+                <span class="wt-squad__cta-label">Смотреть участников</span>
+                <span class="wt-squad__cta-icon"><i class="fa-solid fa-arrow-right"></i></span>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

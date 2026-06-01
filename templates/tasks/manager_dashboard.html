@@ -1,0 +1,120 @@
+{% extends 'manager/base_manager.html' %}
+{% load static %}
+
+{% block title %}Обзор — Alliance{% endblock %}
+{% block nav_dashboard %}wa-subnav__link--active{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/manager-dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="mg-page mg-home">
+    <header class="mg-home__hero">
+        <div>
+            <p class="mg-home__greeting">{{ greeting }}, {{ display_name }}</p>
+            <h1 class="mg-home__title">Обзор</h1>
+            <p class="mg-home__sub">{{ today_label }} · панель менеджера Alliance</p>
+        </div>
+        <a href="{% url 'manager_tasks' %}" class="mg-btn-create">
+            <i class="fa-solid fa-list-check"></i> Управление задачами
+        </a>
+    </header>
+
+    <div class="mg-stats mg-stats--home">
+        <a href="{% url 'manager_tasks' %}" class="mg-stat-card mg-stat-card--link">
+            <span class="mg-stat-card__label">Общий рейтинг</span>
+            <span class="mg-stat-card__value mg-stat-card__value--accent">{{ total_rank|default:0 }}</span>
+        </a>
+        <a href="{% url 'manager_tasks' %}" class="mg-stat-card mg-stat-card--link">
+            <span class="mg-stat-card__label">Задачи</span>
+            <span class="mg-stat-card__value">{{ total_tasks }}</span>
+            <span class="mg-stat-card__meta">{{ tasks_open }} открыто · {{ tasks_in_progress }} в работе</span>
+        </a>
+        <a href="{% url 'manager_workers' %}" class="mg-stat-card mg-stat-card--link">
+            <span class="mg-stat-card__label">Сотрудники</span>
+            <span class="mg-stat-card__value">{{ workers_count }}</span>
+        </a>
+        <a href="{% url 'team_list' %}" class="mg-stat-card mg-stat-card--link">
+            <span class="mg-stat-card__label">Команды</span>
+            <span class="mg-stat-card__value">{{ teams_count }}</span>
+        </a>
+    </div>
+
+    <div class="mg-home__grid">
+        <section class="wa-panel mg-home__panel">
+            <h2 class="mg-home__panel-title">Статус задач</h2>
+            <ul class="mg-status-list">
+                <li><span class="mg-status-list__dot mg-status-list__dot--open"></span> Открыто <strong>{{ tasks_open }}</strong></li>
+                <li><span class="mg-status-list__dot mg-status-list__dot--progress"></span> В работе <strong>{{ tasks_in_progress }}</strong></li>
+                <li><span class="mg-status-list__dot mg-status-list__dot--done"></span> Завершено <strong>{{ tasks_completed }}</strong></li>
+                <li><span class="mg-status-list__dot mg-status-list__dot--fail"></span> Провал <strong>{{ tasks_failed }}</strong></li>
+            </ul>
+            <a href="{% url 'manager_tasks' %}" class="mg-home__link">Все задачи <i class="fa-solid fa-arrow-right"></i></a>
+        </section>
+
+        <section class="wa-panel mg-home__panel">
+            <h2 class="mg-home__panel-title">Быстрые действия</h2>
+            <div class="mg-quick-actions">
+                <a href="{% url 'manager_tasks' %}?create=1" class="mg-quick-actions__btn">
+                    <i class="fa-solid fa-plus"></i> Создать задачу
+                </a>
+                <a href="{% url 'team_create' %}" class="mg-quick-actions__btn mg-quick-actions__btn--ghost">
+                    <i class="fa-solid fa-users"></i> Новая команда
+                </a>
+                <a href="{% url 'team_list' %}" class="mg-quick-actions__btn mg-quick-actions__btn--ghost">
+                    <i class="fa-solid fa-layer-group"></i> Команды
+                </a>
+            </div>
+        </section>
+    </div>
+
+    <section class="wa-panel mg-work-panel">
+        <div class="wa-panel__head">
+            <h2 class="wa-panel__title">Рабочее время сотрудников</h2>
+            <span class="wa-panel__hint">по переключаемому таймеру</span>
+        </div>
+        <div class="wa-table-wrap mg-work-panel__table">
+            <table class="wa-table wa-table--compact">
+                <thead>
+                    <tr>
+                        <th>Сотрудник</th>
+                        <th>Статус</th>
+                        <th>Текущая сессия</th>
+                        <th>Сегодня</th>
+                        <th>На этой неделе</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in workers_work %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'worker_profile' row.worker.username %}" class="wa-link">
+                                {{ row.worker.full_name|default:row.worker.username }}
+                            </a>
+                            {% if row.worker.team_names_display %}
+                            <span class="wa-title-cell__meta">{{ row.worker.team_names_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if row.is_working %}
+                            <span class="mg-status-badge mg-status-badge--on"><i class="fa-solid fa-circle" style="font-size:0.45rem"></i> работаю</span>
+                            {% else %}
+                            <span class="mg-status-badge mg-status-badge--off">не в сети</span>
+                            {% endif %}
+                        </td>
+                        <td class="wa-task-id">{{ row.active_display }}</td>
+                        <td class="wa-task-id">{{ row.today_display }}</td>
+                        <td class="wa-task-id">{{ row.week_display }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="wa-empty">Пока нет сотрудников.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}

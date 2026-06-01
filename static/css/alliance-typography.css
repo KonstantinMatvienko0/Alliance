@@ -1,0 +1,237 @@
+/**
+ * Alliance typography — единая шкала для интерфейса менеджера.
+ * Токены: --wa-font-* в worker-app.css
+ */
+
+.worker-app--manager {
+    font-size: var(--wa-font-base);
+    line-height: var(--wa-line-normal);
+}
+
+/* —— Заголовки страниц —— */
+.worker-app--manager .mg-people-hero__title,
+.worker-app--manager .mg-home__title,
+.worker-app--manager .mg-form-page .mg-people-hero__title,
+.worker-app--manager .mg-detail-hero__title,
+.worker-app--manager .mg-team-detail__title {
+    font-size: var(--wa-font-xl);
+    font-weight: var(--wa-weight-bold);
+    letter-spacing: -0.02em;
+    line-height: var(--wa-line-tight);
+}
+
+.worker-app--manager .mg-people-hero__sub,
+.worker-app--manager .mg-home__sub,
+.worker-app--manager .mg-form-page .mg-people-hero__sub {
+    font-size: var(--wa-font-base);
+    line-height: var(--wa-line-normal);
+    color: var(--wa-muted);
+}
+
+/* —— Секции и панели (uppercase) —— */
+.worker-app--manager .mg-form-panel__title,
+.worker-app--manager .mg-form-section__title,
+.worker-app--manager .ep-section__title,
+.worker-app--manager .mg-candidates__title {
+    font-size: var(--wa-font-xs);
+    font-weight: var(--wa-weight-semibold);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--wa-muted);
+    line-height: var(--wa-line-tight);
+}
+
+.worker-app--manager .mg-form-panel__hint,
+.worker-app--manager .mg-field__hint,
+.worker-app--manager .mg-form-page .mg-form-panel__hint {
+    font-size: var(--wa-font-sm);
+    line-height: var(--wa-line-normal);
+    color: var(--wa-muted);
+}
+
+/* —— Статистика —— */
+.worker-app--manager .mg-people-stat__label,
+.worker-app--manager .mg-stat-card__label,
+.worker-app--manager .mg-people-stat__meta,
+.worker-app--manager .mg-stat-card__meta {
+    font-size: var(--wa-font-xs);
+    color: var(--wa-muted);
+}
+
+.worker-app--manager .mg-people-stat__value,
+.worker-app--manager .mg-stat-card__value {
+    font-size: var(--wa-font-lg);
+    font-weight: var(--wa-weight-bold);
+    letter-spacing: -0.02em;
+}
+
+/* —— Формы —— */
+.worker-app--manager .mg-field > label,
+.worker-app--manager .mg-filter-bar__label,
+.worker-app--manager .ep-form .mg-field > label,
+.worker-app--manager .ep-form .mg-field label,
+.worker-app--manager .wa-fmodal--create .mg-field > label {
+    font-size: var(--wa-font-base);
+    font-weight: var(--wa-weight-medium);
+    color: #d4d4d8;
+    line-height: var(--wa-line-tight);
+}
+
+.worker-app--manager .mg-field input:not([type="checkbox"]):not([type="radio"]),
+.worker-app--manager .mg-field select,
+.worker-app--manager .mg-field textarea,
+.worker-app--manager .mg-input,
+.worker-app--manager .ep-form .mg-field input:not([type="checkbox"]):not([type="radio"]),
+.worker-app--manager .ep-form .mg-field textarea,
+.worker-app--manager .wa-fmodal--create .mg-field input:not([type="checkbox"]):not([type="radio"]),
+.worker-app--manager .wa-fmodal--create .mg-field select,
+.worker-app--manager .wa-fmodal--create .mg-field textarea {
+    font-size: var(--wa-font-base);
+}
+
+.worker-app--manager .mg-field__hint,
+.worker-app--manager .wa-fmodal--create .mg-field__hint {
+    font-size: var(--wa-font-sm);
+}
+
+.worker-app--manager .mg-field__errors,
+.worker-app--manager .mg-field .errorlist {
+    font-size: var(--wa-font-xs);
+}
+
+.worker-app--manager .mg-form-errors {
+    font-size: var(--wa-font-sm);
+}
+
+/* —— Кнопки —— */
+.worker-app--manager .mg-btn-create,
+.worker-app--manager .mg-btn-ghost,
+.worker-app--manager .mg-back-link,
+.worker-app--manager .mg-people-chip,
+.worker-app--manager .mg-filter-bar__apply-btn {
+    font-size: var(--wa-font-base);
+}
+
+.worker-app--manager .mg-btn-create--sm {
+    font-size: var(--wa-font-sm);
+}
+
+/* —— Поиск и тулбар —— */
+.worker-app--manager .mg-people-toolbar__search input,
+.worker-app--manager .mg-toolbar-search input {
+    font-size: var(--wa-font-base);
+}
+
+/* —— Карточки сотрудников —— */
+.worker-app--manager .mg-worker-card__name,
+.worker-app--manager .ep-card__title {
+    font-size: var(--wa-font-md);
+    font-weight: var(--wa-weight-semibold);
+    line-height: var(--wa-line-tight);
+}
+
+.worker-app--manager .mg-worker-card__username,
+.worker-app--manager .ep-card__sub {
+    font-size: var(--wa-font-sm);
+    line-height: var(--wa-line-normal);
+}
+
+.worker-app--manager .mg-worker-card__rating {
+    font-size: var(--wa-font-lg);
+    font-weight: var(--wa-weight-bold);
+}
+
+.worker-app--manager .mg-people-badge,
+.worker-app--manager .mg-type-pill,
+.worker-app--manager .mg-status-badge {
+    font-size: var(--wa-font-xs);
+}
+
+.worker-app--manager .mg-metric-mini__label {
+    font-size: var(--wa-font-2xs);
+}
+
+.worker-app--manager .mg-metric-mini__value,
+.worker-app--manager .mg-bar-row__top {
+    font-size: var(--wa-font-sm);
+}
+
+.worker-app--manager .mg-worker-card__skills .mg-skill-tag,
+.worker-app--manager .mg-skill-tag {
+    font-size: var(--wa-font-xs);
+}
+
+.worker-app--manager .mg-worker-card__footer,
+.worker-app--manager .mg-worker-card__foot {
+    font-size: var(--wa-font-sm);
+}
+
+/* —— Участники команды —— */
+.worker-app--manager .mg-member-pick__name {
+    font-size: var(--wa-font-base);
+}
+
+.worker-app--manager .mg-member-pick__meta,
+.worker-app--manager .mg-member-pick__reasons {
+    font-size: var(--wa-font-sm);
+}
+
+.worker-app--manager .mg-member-pick__score {
+    font-size: var(--wa-font-base);
+}
+
+.worker-app--manager .mg-member-pick__badge {
+    font-size: var(--wa-font-2xs);
+}
+
+/* —— Skill multi-picker —— */
+.worker-app--manager .mg-skill-multi__trigger,
+.worker-app--manager .mg-skill-multi__item-text {
+    font-size: var(--wa-font-base);
+}
+
+/* —— Панели дашборда —— */
+.worker-app--manager .mg-home__panel-title,
+.worker-app--manager .wa-panel__title,
+.worker-app--manager .mg-work-panel .wa-panel__title {
+    font-size: var(--wa-font-base);
+    font-weight: var(--wa-weight-semibold);
+}
+
+.worker-app--manager .wa-panel__hint,
+.worker-app--manager .mg-work-panel .wa-panel__hint {
+    font-size: var(--wa-font-xs);
+}
+
+.worker-app--manager .mg-empty__title {
+    font-size: var(--wa-font-base);
+}
+
+.worker-app--manager .mg-empty__text {
+    font-size: var(--wa-font-sm);
+}
+
+.worker-app--manager .mg-empty__icon {
+    font-size: var(--wa-font-2xl);
+}
+
+/* —— Таблицы —— */
+.worker-app--manager .mg-work-panel__table .wa-table th,
+.worker-app--manager .mg-work-panel__table .wa-table td,
+.worker-app--manager .wa-table th,
+.worker-app--manager .wa-table td {
+    font-size: var(--wa-font-base);
+}
+
+/* —— Навигация shell —— */
+.worker-app--manager .wa-subnav__link {
+    font-size: var(--wa-font-base);
+}
+
+.worker-app--manager .wa-brand {
+    font-size: var(--wa-font-base);
+}
+
+.worker-app--manager .wa-message {
+    font-size: var(--wa-font-base);
+}

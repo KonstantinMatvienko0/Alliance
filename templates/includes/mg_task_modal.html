@@ -1,0 +1,29 @@
+<div
+    class="wa-fmodal wa-fmodal--create"
+    id="{{ modal_id }}"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="{{ modal_id }}-title"
+    aria-hidden="true"
+    {% if auto_open %}data-fmodal-auto-open{% endif %}
+>
+    <div class="wa-fmodal__backdrop" data-fmodal-close></div>
+    <div class="wa-fmodal__box wa-fmodal__box--task">
+        <header class="wa-fmodal__header">
+            <h3 class="wa-fmodal__title" id="{{ modal_id }}-title">{{ modal_title }}</h3>
+            <button type="button" class="wa-fmodal__close" data-fmodal-close aria-label="Закрыть">&times;</button>
+        </header>
+        <form method="post" action="{% url 'manager_tasks' %}" class="wa-fmodal__form mg-create-modal-form">
+            {% csrf_token %}
+            <input type="hidden" name="form_type" value="{{ form_type }}">
+            {% if task_id %}<input type="hidden" name="task_id" value="{{ task_id }}">{% endif %}
+            <div class="wa-fmodal__body wa-fmodal__body--form">
+                {% include 'includes/mg_create_task_form.html' with prefill_worker=prefill_worker prefill_team=prefill_team %}
+            </div>
+            <footer class="wa-fmodal__footer">
+                <button type="button" class="wa-fmodal__btn wa-fmodal__btn--ghost" data-fmodal-close>Отмена</button>
+                <button type="submit" class="wa-fmodal__btn wa-fmodal__btn--primary">{{ submit_label }}</button>
+            </footer>
+        </form>
+    </div>
+</div>

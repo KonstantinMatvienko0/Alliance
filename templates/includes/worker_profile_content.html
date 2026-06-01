@@ -1,0 +1,249 @@
+{% if is_manager_view %}
+<a href="{% url 'manager_workers' %}" class="mg-back-btn">
+    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+    <span>Назад</span>
+</a>
+{% elif is_viewing_other %}
+<a href="{% if shared_team %}{% url 'worker_team_detail' shared_team.pk %}{% else %}{% url 'worker_team' %}{% endif %}" class="mg-back-btn">
+    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+    <span>Назад</span>
+</a>
+{% endif %}
+
+<div class="wa-main--characteristics{% if is_manager_view %} wa-main--characteristics-manager{% endif %}">
+    <div class="ch-layout">
+        <div class="ch-column ch-column--side">
+        <section class="ch-card ch-profile">
+            <div class="ch-avatar" aria-hidden="true">
+                <i class="fa-regular fa-user"></i>
+            </div>
+            <h1 class="ch-name">{{ worker.full_name|default:worker.username }}</h1>
+            <p class="ch-role">{{ role_title }}</p>
+            {% if is_manager_view %}
+            <p class="ch-rating-badge">Рейтинг {{ worker.rating }}</p>
+            {% endif %}
+            {% if profile_location %}
+            <p class="ch-location">{{ profile_location }}</p>
+            {% endif %}
+            {% if is_own_profile or is_manager_view %}
+            <div class="ch-actions">
+                {% if is_manager_view %}
+                <a href="{% url 'manager_tasks' %}?create=1&amp;assign_worker={{ worker.pk }}" class="ch-btn ch-btn--primary">Добавить задачу</a>
+                {% else %}
+                <a href="{% url 'dashboard' %}" class="ch-btn ch-btn--primary">Добавить задачу</a>
+                {% endif %}
+                {% if worker.email %}
+                <a href="mailto:{{ worker.email }}" class="ch-btn ch-btn--outline">Написать</a>
+                {% else %}
+                <button type="button" class="ch-btn ch-btn--outline" disabled>Написать</button>
+                {% endif %}
+            </div>
+            {% elif worker.email %}
+            <div class="ch-actions">
+                <a href="mailto:{{ worker.email }}" class="ch-btn ch-btn--outline">Написать</a>
+            </div>
+            {% endif %}
+            {% if is_manager_view and worker_teams %}
+            <div class="ch-profile-teams">
+                {% for team in worker_teams %}
+                <a href="{% url 'team_detail' team.pk %}" class="ch-profile-edit">
+                    <i class="fa-solid fa-people-group"></i> {{ team.name }}
+                </a>
+                {% endfor %}
+            </div>
+            {% elif shared_team %}
+            <a href="{% url 'worker_team_detail' shared_team.pk %}" class="ch-profile-edit">
+                <i class="fa-solid fa-people-group"></i> Страница команды
+            </a>
+            {% endif %}
+            {% if can_edit_profile %}
+            <a href="{% url 'edit_profile' worker.username %}" class="ch-profile-edit">
+                <i class="fa-solid fa-pen"></i> Редактировать профиль
+            </a>
+            {% endif %}
+        </section>
+
+        <section class="ch-card ch-project">
+            <h2 class="ch-card__title">Статус проекта</h2>
+            <div class="ch-progress-list">
+                {% for item in project_status %}
+                <div class="ch-progress-item">
+                    <div class="ch-progress-item__label">{{ item.label }}</div>
+                    <div class="ch-progress-bar">
+                        <div class="ch-progress-bar__fill" style="width: {% if item.rate %}{{ item.rate }}{% else %}4{% endif %}%;"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        </div>
+
+        <div class="ch-column">
+        <section class="ch-card ch-personal">
+            <div class="ch-card__head">
+                <h2 class="ch-card__title">Личная информация</h2>
+                {% if can_edit_profile %}
+                <a href="{% url 'edit_profile' worker.username %}#personal" class="ch-card__edit">
+                    <i class="fa-solid fa-pen"></i> Редактировать
+                </a>
+                {% endif %}
+            </div>
+            <div class="ch-rows" id="personal">
+                <div class="ch-row">
+                    <span class="ch-row__label">Полное имя</span>
+                    <span class="ch-row__value">{{ worker.full_name|default:worker.username }}</span>
+                </div>
+                <div class="ch-row">
+                    <span class="ch-row__label">Email</span>
+                    <span class="ch-row__value">{{ worker.email|default:"—" }}</span>
+                </div>
+                <div class="ch-row">
+                    <span class="ch-row__label">Телефон</span>
+                    <span class="ch-row__value">{{ worker.phone|default:"—" }}</span>
+                </div>
+                <div class="ch-row">
+                    <span class="ch-row__label">Адрес</span>
+                    <span class="ch-row__value">
+                        {% if profile_location %}{{ profile_location }}{% else %}—{% endif %}
+                    </span>
+                </div>
+                <div class="ch-row">
+                    <span class="ch-row__label">Команды</span>
+                    <span class="ch-row__value">
+                        {% if worker.team_names_display %}{{ worker.team_names_display }}{% else %}—{% endif %}
+                    </span>
+                </div>
+                {% if is_manager_view %}
+                <div class="ch-row">
+                    <span class="ch-row__label">Надёжность</span>
+                    <span class="ch-row__value">{{ worker.reliability_score|floatformat:1 }} / 10</span>
+                </div>
+                <div class="ch-row">
+                    <span class="ch-row__label">Командная работа</span>
+                    <span class="ch-row__value">{{ worker.collaboration_score|floatformat:1 }} / 10</span>
+                </div>
+                <div class="ch-row">
+                    <span class="ch-row__label">Скорость</span>
+                    <span class="ch-row__value">{{ worker.velocity_score|floatformat:1 }} / 10</span>
+                </div>
+                {% endif %}
+            </div>
+        </section>
+
+        <section class="ch-card ch-social">
+            <div class="ch-card__head">
+                <h2 class="ch-card__title">Соцсети</h2>
+                {% if can_edit_profile %}
+                <a href="{% url 'edit_profile' worker.username %}#social" class="ch-card__edit">
+                    <i class="fa-solid fa-pen"></i> Редактировать
+                </a>
+                {% endif %}
+            </div>
+            <div class="ch-rows" id="social">
+                <div class="ch-row ch-row--social">
+                    <span class="ch-row__icon"><i class="fa-solid fa-globe"></i> Сайт</span>
+                    <span class="ch-row__value">{% if worker.website %}{{ worker.website }}{% else %}—{% endif %}</span>
+                </div>
+                <div class="ch-row ch-row--social">
+                    <span class="ch-row__icon"><i class="fa-brands fa-github"></i> GitHub</span>
+                    <span class="ch-row__value">{{ worker.github|default:"—" }}</span>
+                </div>
+                <div class="ch-row ch-row--social">
+                    <span class="ch-row__icon"><i class="fa-brands fa-twitter"></i> Twitter</span>
+                    <span class="ch-row__value">{{ worker.twitter|default:"—" }}</span>
+                </div>
+                <div class="ch-row ch-row--social">
+                    <span class="ch-row__icon"><i class="fa-brands fa-telegram"></i> Telegram</span>
+                    <span class="ch-row__value">{{ worker.telegram|default:"—" }}</span>
+                </div>
+            </div>
+        </section>
+        </div>
+
+        <div class="ch-column ch-column--mid">
+        <section class="ch-card ch-tasks">
+            <h2 class="ch-card__title">Задачи</h2>
+            <div class="ch-rows">
+                <div class="ch-row">
+                    <span class="ch-row__label">Завершено</span>
+                    <span class="ch-row__value">{{ completed }}</span>
+                </div>
+                <div class="ch-row">
+                    <span class="ch-row__label">Провалено</span>
+                    <span class="ch-row__value">{{ failed }}</span>
+                </div>
+                <div class="ch-row">
+                    <span class="ch-row__label">В работе</span>
+                    <span class="ch-row__value">{{ in_progress }}</span>
+                </div>
+                <div class="ch-row">
+                    <span class="ch-row__label">Рейтинг соло</span>
+                    <span class="ch-row__value">{{ solo_rank }}</span>
+                </div>
+                <div class="ch-row">
+                    <span class="ch-row__label">Рейтинг в команде</span>
+                    <span class="ch-row__value">{{ team_rank }}</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="ch-card ch-radar-card" id="skills" data-skills-radar>
+            <h2 class="ch-card__title">Радар навыков</h2>
+            <div class="ch-radar-card__body">
+                <div class="ch-radar-card__chart">
+                    <canvas id="skillsRadarChart" aria-label="Радар навыков"></canvas>
+                </div>
+                <p class="ch-radar-card__empty ch-empty" id="skillsRadarEmpty" hidden>Оценок навыков пока нет.</p>
+            </div>
+            {% if can_edit_skills %}
+            <a href="{% url 'edit_skills' worker.username %}" class="ch-radar-card__edit">
+                <i class="fa-solid fa-pen"></i> Редактировать навыки
+            </a>
+            {% endif %}
+        </section>
+        </div>
+
+        <div class="ch-column ch-column--team">
+        <section class="ch-card ch-team" id="team-members">
+            <h2 class="ch-card__title">{% if is_manager_view or is_viewing_other %}Коллеги по командам{% else %}Участники команды{% endif %}</h2>
+            <p class="ch-card__subtitle">
+                {% if is_manager_view or is_viewing_other %}
+                Другие сотрудники в тех же командах.
+                {% else %}
+                Пригласите участников команды к совместной работе.
+                {% endif %}
+            </p>
+            {% if team_members_rows %}
+            <div class="ch-team-list">
+                {% for row in team_members_rows %}
+                {% if is_manager_view or is_viewing_other %}
+                <a href="{% url 'worker_profile' row.member.username %}" class="ch-team-member ch-team-member--link">
+                {% else %}
+                <div class="ch-team-member">
+                {% endif %}
+                    <div class="ch-team-member__avatar">
+                        <i class="fa-regular fa-user"></i>
+                    </div>
+                    <div class="ch-team-member__info">
+                        <div class="ch-team-member__name">{{ row.member.full_name|default:row.member.username }}</div>
+                        <div class="ch-team-member__email">
+                            {% if is_manager_view and row.team_name %}{{ row.team_name }} · {% endif %}{{ row.member.email|default:"—" }}
+                        </div>
+                    </div>
+                    <span class="ch-badge">{{ row.badge }}</span>
+                {% if is_manager_view or is_viewing_other %}
+                </a>
+                {% else %}
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="ch-empty">{% if is_manager_view or is_viewing_other %}Нет коллег в общих командах.{% else %}Команда не назначена.{% endif %}</p>
+            {% endif %}
+        </section>
+        </div>
+    </div>
+</div>
+
+<script id="soft-skills-data" type="application/json">{{ soft_skills_json|safe }}</script>

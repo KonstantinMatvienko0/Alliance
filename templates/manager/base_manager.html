@@ -1,0 +1,99 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Alliance{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/worker-app.css' %}">
+    <link rel="stylesheet" href="{% static 'css/alliance-typography.css' %}">
+    <link rel="stylesheet" href="{% static 'css/manager-shell.css' %}">
+    <link rel="stylesheet" href="{% static 'css/alliance-motion.css' %}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body
+    class="worker-app worker-app--manager {% block body_class %}{% endblock %}"
+    data-recommend-assignees-url="{% url 'recommend_assignees' %}"
+>
+    <header class="wa-topbar wa-topbar--shell">
+        <div class="wa-topbar__start">
+            <a href="{% url 'dashboard' %}" class="wa-brand">
+                <img src="{% static 'img/alliance-logo.png' %}" alt="" class="wa-brand__logo" width="20" height="20">
+                Alliance
+            </a>
+        </div>
+
+        <div class="wa-topbar__center wa-clock" aria-live="polite">
+            <div class="wa-clock__time" id="wa-clock-time">--:--</div>
+            <div class="wa-clock__day" id="wa-clock-day">---</div>
+        </div>
+
+        <div class="wa-topbar__end">
+            <a href="{% url 'dashboard' %}" class="wa-user">
+                <span>{{ user.full_name|default:user.username }}</span>
+                <span class="wa-user__avatar"><i class="fa-regular fa-user"></i></span>
+            </a>
+            <form action="{% url 'logout' %}" method="post" class="wa-logout-form">
+                {% csrf_token %}
+                <button type="submit" class="wa-logout" title="Выйти"><i class="fa-solid fa-right-from-bracket"></i></button>
+            </form>
+        </div>
+    </header>
+
+    <nav class="wa-subnav wa-subnav--shell">
+        <div class="wa-subnav__links">
+            <a href="{% url 'dashboard' %}" class="wa-subnav__link {% block nav_dashboard %}{% endblock %}">Обзор</a>
+            <a href="{% url 'manager_tasks' %}" class="wa-subnav__link {% block nav_tasks %}{% endblock %}">Задачи</a>
+            <a href="{% url 'team_list' %}" class="wa-subnav__link {% block nav_teams %}{% endblock %}">Команды</a>
+            <a href="{% url 'manager_workers' %}" class="wa-subnav__link {% block nav_workers %}{% endblock %}">Сотрудники</a>
+        </div>
+    </nav>
+
+    <main class="wa-main wa-main--manager">
+        {% block content %}{% endblock %}
+    </main>
+
+    {% block modals %}{% endblock %}
+
+    <script>
+        (function () {
+            const timeEl = document.getElementById('wa-clock-time');
+            const dayEl = document.getElementById('wa-clock-day');
+            const days = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
+            function tick() {
+                const now = new Date();
+                timeEl.textContent = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+                dayEl.textContent = days[now.getDay()];
+            }
+            tick();
+            setInterval(tick, 1000 * 30);
+
+            const table = document.getElementById('mg-task-table');
+            const selectedEl = document.getElementById('mg-selected-count');
+            if (table && selectedEl) {
+                const checkboxes = table.querySelectorAll('.wa-check');
+                const checkAll = document.getElementById('mg-check-all');
+                function updateSelected() {
+                    const n = [...checkboxes].filter(c => c.checked && c.id !== 'mg-check-all').length;
+                    selectedEl.textContent = n;
+                }
+                checkboxes.forEach(c => c.addEventListener('change', updateSelected));
+                if (checkAll) {
+                    checkAll.addEventListener('change', function () {
+                        checkboxes.forEach(c => { if (c !== checkAll) c.checked = checkAll.checked; });
+                        updateSelected();
+                    });
+                }
+            }
+        })();
+    </script>
+    <script src="{% static 'js/filter-modal.js' %}"></script>
+    <script src="{% static 'js/actions-menu.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

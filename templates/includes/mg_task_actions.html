@@ -1,0 +1,26 @@
+<div class="wa-actions">
+    <button type="button" class="wa-actions__toggle" aria-label="Действия"><i class="fa-solid fa-ellipsis"></i></button>
+    <div class="wa-actions__menu">
+        {% if task.status == 'open' or task.status == 'in_progress' %}
+        <a href="{% url 'manager_tasks' %}?edit={{ task.pk }}{% if query_string %}&{{ query_string }}{% endif %}" class="wa-actions__item">
+            <i class="fa-solid fa-pen"></i> Редактировать
+        </a>
+        {% endif %}
+        {% if task.status != 'completed' and task.status != 'failed' %}
+        <form action="{% url 'manager_complete_task' task.pk %}" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="success" value="true">
+            <button type="submit" class="wa-actions__item mg-actions__item--success">Завершить</button>
+        </form>
+        <form action="{% url 'manager_complete_task' task.pk %}" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="success" value="false">
+            <button type="submit" class="wa-actions__item mg-actions__item--danger">Отметить как провал</button>
+        </form>
+        {% endif %}
+        <form action="{% url 'delete_task' task.pk %}" method="post" onsubmit="return confirm('Удалить эту задачу?');">
+            {% csrf_token %}
+            <button type="submit" class="wa-actions__item mg-actions__item--danger">Удалить</button>
+        </form>
+    </div>
+</div>

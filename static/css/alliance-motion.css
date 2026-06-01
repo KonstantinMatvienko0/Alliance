@@ -1,0 +1,339 @@
+/* Alliance — subtle UI motion (respects reduced motion) */
+
+@keyframes wa-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes wa-fade-up {
+    from {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes wa-fade-down {
+    from {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes wa-scale-in {
+    from {
+        opacity: 0;
+        transform: scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes wa-shimmer-accent {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(193, 255, 114, 0); }
+    50% { box-shadow: 0 0 0 1px rgba(193, 255, 114, 0.15); }
+}
+
+/* —— Page enter —— */
+.worker-app .wh-page .wa-panel,
+.worker-app .wh-hero,
+.worker-app .wh-stat {
+    animation: wa-fade-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.worker-app .wh-hero { animation-delay: 0.04s; }
+.worker-app .wh-stats .wh-stat:nth-child(1) { animation-delay: 0.08s; }
+.worker-app .wh-stats .wh-stat:nth-child(2) { animation-delay: 0.11s; }
+.worker-app .wh-stats .wh-stat:nth-child(3) { animation-delay: 0.14s; }
+.worker-app .wh-stats .wh-stat:nth-child(4) { animation-delay: 0.17s; }
+.worker-app .wh-stats .wh-stat:nth-child(5) { animation-delay: 0.2s; }
+.worker-app .wh-grid .wh-panel { animation-delay: 0.14s; }
+.worker-app .wh-side .wh-panel:nth-child(1) { animation-delay: 0.18s; }
+.worker-app .wh-side .wh-panel:nth-child(2) { animation-delay: 0.22s; }
+
+.worker-app .wh-task-item {
+    transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+}
+
+.worker-app .wh-task-item:hover {
+    transform: translateX(3px);
+}
+
+.worker-app .wh-stat:hover,
+.worker-app .wh-quick__item:hover {
+    transform: translateY(-2px);
+}
+
+.worker-app .wa-panel:not(.wh-hero):not(.wh-stat),
+.worker-app .wa-main--characteristics,
+.worker-app .mg-page > .mg-stats--compact,
+.worker-app .mg-page > .mg-tasks-panel {
+    animation: wa-fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.04s both;
+}
+
+.worker-app .ch-layout {
+    animation: none;
+}
+
+.worker-app .ch-card {
+    animation: wa-fade-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.worker-app .ch-column:nth-child(1) .ch-card:nth-child(1) { animation-delay: 0.08s; }
+.worker-app .ch-column:nth-child(1) .ch-card:nth-child(2) { animation-delay: 0.14s; }
+.worker-app .ch-column:nth-child(2) .ch-card:nth-child(1) { animation-delay: 0.12s; }
+.worker-app .ch-column:nth-child(2) .ch-card:nth-child(2) { animation-delay: 0.18s; }
+.worker-app .ch-column:nth-child(3) .ch-card:nth-child(1) { animation-delay: 0.16s; }
+.worker-app .ch-column:nth-child(3) .ch-card:nth-child(2) { animation-delay: 0.22s; }
+.worker-app .ch-column:nth-child(4) .ch-card { animation-delay: 0.2s; }
+
+.worker-app .mg-stats--compact .mg-stat-compact,
+.worker-app .mg-stats--home .mg-stat-card {
+    animation: wa-fade-up 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.worker-app .mg-stats--compact .mg-stat-compact:nth-child(1) { animation-delay: 0.05s; }
+.worker-app .mg-stats--compact .mg-stat-compact:nth-child(2) { animation-delay: 0.09s; }
+.worker-app .mg-stats--compact .mg-stat-compact:nth-child(3) { animation-delay: 0.13s; }
+.worker-app .mg-stats--compact .mg-stat-compact:nth-child(4) { animation-delay: 0.17s; }
+
+.worker-app .mg-worker-card,
+.worker-app .mg-team-card,
+.worker-app .wt-squad {
+    animation: wa-fade-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.worker-app .mg-people-grid .mg-worker-card:nth-child(1) { animation-delay: 0.04s; }
+.worker-app .mg-people-grid .mg-worker-card:nth-child(2) { animation-delay: 0.08s; }
+.worker-app .mg-people-grid .mg-worker-card:nth-child(3) { animation-delay: 0.12s; }
+.worker-app .mg-people-grid .mg-worker-card:nth-child(4) { animation-delay: 0.16s; }
+.worker-app .mg-people-grid .mg-worker-card:nth-child(5) { animation-delay: 0.2s; }
+.worker-app .mg-people-grid .mg-worker-card:nth-child(6) { animation-delay: 0.24s; }
+
+/* —— Top bar —— */
+.worker-app .wa-topbar {
+    animation: wa-fade-down 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.worker-app .wa-subnav {
+    animation: wa-fade-down 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.05s both;
+}
+
+/* —— Cards & panels hover —— */
+.worker-app .ch-card,
+.worker-app .mg-worker-card,
+.worker-app .mg-team-card,
+.worker-app .mg-stat-card,
+.worker-app .wt-squad {
+    transition:
+        transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+        box-shadow 0.22s ease,
+        border-color 0.22s ease;
+}
+
+.worker-app .ch-card:hover,
+.worker-app .mg-worker-card:hover,
+.worker-app .mg-team-card:hover,
+.worker-app .mg-stat-card--link:hover,
+.worker-app .wt-squad:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+}
+
+.worker-app .wa-panel {
+    transition: box-shadow 0.25s ease;
+}
+
+/* —— Buttons & chips —— */
+.worker-app .ch-btn,
+.worker-app .wa-fmodal__btn,
+.worker-app .wa-btn,
+.worker-app .mg-btn-create,
+.worker-app .mg-filter-btn,
+.worker-app .wa-chip,
+.worker-app .mg-people-chip {
+    transition:
+        transform 0.15s ease,
+        background-color 0.15s ease,
+        border-color 0.15s ease,
+        color 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+.worker-app .ch-btn:active,
+.worker-app .wa-fmodal__btn--primary:active,
+.worker-app .wa-btn:active,
+.worker-app .mg-btn-create:active {
+    transform: scale(0.97);
+}
+
+.worker-app .ch-btn--primary:hover,
+.worker-app .wa-fmodal__btn--primary:hover,
+.worker-app .mg-btn-create:hover {
+    box-shadow: 0 4px 18px rgba(193, 255, 114, 0.25);
+}
+
+.worker-app .wa-chip:hover,
+.worker-app .mg-filter-btn:hover {
+    transform: translateY(-1px);
+}
+
+/* —— Nav —— */
+.worker-app .wa-subnav__link {
+    transition: color 0.2s ease, border-color 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.worker-app .wa-brand {
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.worker-app .wa-brand:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+/* —— Table —— */
+.worker-app .wa-table tbody tr {
+    transition: background-color 0.15s ease;
+}
+
+.worker-app .wa-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.worker-app .wa-check {
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.worker-app .wa-check:checked {
+    transform: scale(1.08);
+}
+
+/* —— Type pills & tags —— */
+.worker-app .mg-type-pill,
+.worker-app .mg-type-option,
+.worker-app .wa-filter-tag {
+    transition:
+        transform 0.15s ease,
+        border-color 0.15s ease,
+        background-color 0.15s ease,
+        color 0.15s ease;
+}
+
+.worker-app .mg-type-option:hover {
+    transform: translateY(-1px);
+}
+
+.worker-app .mg-type-option:has(input:checked) {
+    animation: wa-shimmer-accent 2.5s ease-in-out infinite;
+}
+
+/* —— Modals —— */
+.worker-app .wa-fmodal.is-open .wa-fmodal__backdrop {
+    animation: wa-fade-in 0.22s ease both;
+}
+
+.worker-app .wa-fmodal.is-open .wa-fmodal__box {
+    animation: wa-scale-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.worker-app .wa-fmodal__close {
+    transition: color 0.15s ease, background-color 0.15s ease, transform 0.15s ease;
+}
+
+.worker-app .wa-fmodal__close:hover {
+    transform: rotate(90deg);
+}
+
+.worker-app .wa-fmodal__option {
+    transition: background-color 0.12s ease, padding-left 0.12s ease;
+}
+
+.worker-app .wa-fmodal__option:hover {
+    padding-left: 0.65rem;
+}
+
+/* —— Actions menu —— */
+.worker-app .wa-actions__toggle {
+    transition: color 0.15s ease, background-color 0.15s ease, transform 0.15s ease;
+}
+
+.worker-app .wa-actions__toggle:hover {
+    transform: scale(1.08);
+}
+
+.worker-app .wa-actions__menu {
+    display: none;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(-4px);
+    transition:
+        opacity 0.15s ease,
+        transform 0.15s cubic-bezier(0.22, 1, 0.36, 1),
+        visibility 0.15s;
+}
+
+.worker-app .wa-actions.is-open > .wa-actions__menu {
+    display: none;
+}
+
+.worker-app .wa-actions__menu--floating.wa-actions__menu--shown {
+    display: block;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: none;
+    transition: opacity 0.15s ease, visibility 0.15s ease;
+}
+
+.worker-app .wa-actions__item {
+    transition: background-color 0.12s ease, color 0.12s ease, padding-left 0.12s ease;
+}
+
+.worker-app .wa-actions__item:hover {
+    padding-left: 0.95rem;
+}
+
+/* —— Assign picker —— */
+.worker-app .mg-assign-picker__item {
+    transition: background-color 0.12s ease, border-color 0.12s ease, transform 0.12s ease;
+}
+
+.worker-app .mg-assign-picker__item:hover {
+    transform: translateX(2px);
+}
+
+/* —— Messages —— */
+.worker-app .wa-message {
+    animation: wa-fade-up 0.35s ease both;
+}
+
+/* —— Progress bars —— */
+.worker-app .ch-progress-bar__fill {
+    transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* —— Reduced motion —— */
+@media (prefers-reduced-motion: reduce) {
+    .worker-app *,
+    .worker-app *::before,
+    .worker-app *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+
+    .worker-app .wa-actions__menu {
+        transform: none;
+    }
+}

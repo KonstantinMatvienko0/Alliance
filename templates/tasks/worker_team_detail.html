@@ -1,0 +1,224 @@
+{% extends 'worker/base_worker.html' %}
+{% load static task_ui %}
+
+{% block title %}{{ team.name }} — Команда{% endblock %}
+{% block nav_team %}wa-subnav__link--active{% endblock %}
+{% block nav_tasks %}{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/worker-team.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="wt-page wt-page--detail">
+    <a href="{% url 'worker_team' %}" class="wt-back">
+        <i class="fa-solid fa-arrow-left"></i> Назад к команде
+    </a>
+
+    <header class="wt-detail-hero">
+        <div class="wt-detail-hero__top">
+            <div class="wt-detail-hero__icon"><i class="fa-solid fa-shield-halved"></i></div>
+            <div class="wt-detail-hero__copy">
+                <h1 class="wt-detail-hero__title">{{ team.name }}</h1>
+                <p class="wt-detail-hero__desc">{{ team.description|default:"Общий отряд для совместной работы." }}</p>
+                <div class="wt-detail-hero__meta">
+                    <span class="wt-tag wt-tag--accent">{{ priority }} нагрузка</span>
+                    {% if dominant_type %}
+                    <span class="wt-tag wt-tag--focus">Фокус {{ dominant_type }}</span>
+                    {% endif %}
+                    <span class="wt-tag">Синергия {{ team.synergy_score|floatformat:1 }}</span>
+                    <span class="wt-tag">Сплочённость {{ team.cohesion_score|floatformat:1 }}</span>
+                    <span class="wt-tag">{{ team_item.members_count }} участников</span>
+                </div>
+            </div>
+            <div class="wt-detail-hero__stats">
+                <div class="wt-mini-stat">
+                    <span class="wt-mini-stat__val wt-mini-stat__val--accent">{{ team_item.total_rating }}</span>
+                    <span class="wt-mini-stat__lbl">Рейтинг команды</span>
+                </div>
+                <div class="wt-mini-stat">
+                    <span class="wt-mini-stat__val">{{ tasks_open|add:tasks_in_progress }}</span>
+                    <span class="wt-mini-stat__lbl">Активных</span>
+                </div>
+                <div class="wt-mini-stat">
+                    <span class="wt-mini-stat__val">{{ tasks_done }}</span>
+                    <span class="wt-mini-stat__lbl">Завершено</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="wt-detail-hero__body">
+            <div class="wt-detail-metrics">
+                <div class="wt-detail-metric">
+                    <span class="wt-detail-metric__val">{{ team_item.members_count }}</span>
+                    <span class="wt-detail-metric__lbl">Участников</span>
+                </div>
+                <div class="wt-detail-metric">
+                    <span class="wt-detail-metric__val{% if working_now %} wt-detail-metric__val--accent{% endif %}">{{ working_now }}</span>
+                    <span class="wt-detail-metric__lbl">Сейчас в работе</span>
+                </div>
+                <div class="wt-detail-metric">
+                    <span class="wt-detail-metric__val">{{ avg_rank }}</span>
+                    <span class="wt-detail-metric__lbl">Средний ранг задач</span>
+                </div>
+                <div class="wt-detail-metric">
+                    <span class="wt-detail-metric__val">{{ tasks_total }}</span>
+                    <span class="wt-detail-metric__lbl">Всего задач</span>
+                </div>
+                {% if tasks_failed %}
+                <div class="wt-detail-metric">
+                    <span class="wt-detail-metric__val wt-detail-metric__val--danger">{{ tasks_failed }}</span>
+                    <span class="wt-detail-metric__lbl">Провалено</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="wt-detail-grid">
+                <section class="wt-detail-card">
+                    <h2 class="wt-detail-card__title"><i class="fa-solid fa-chart-simple"></i> Показатели отряда</h2>
+                    <div class="wt-meter">
+                        <div class="wt-meter__head">
+                            <span>Синергия</span>
+                            <strong>{{ team.synergy_score|floatformat:1 }} / 10</strong>
+                        </div>
+                        <div class="wt-meter__track">
+                            <div class="wt-meter__fill" style="width: {{ synergy_percent }}%;"></div>
+                        </div>
+                    </div>
+                    <div class="wt-meter">
+                        <div class="wt-meter__head">
+                            <span>Сплочённость</span>
+                            <strong>{{ team.cohesion_score|floatformat:1 }} / 10</strong>
+                        </div>
+                        <div class="wt-meter__track">
+                            <div class="wt-meter__fill wt-meter__fill--soft" style="width: {{ cohesion_percent }}%;"></div>
+                        </div>
+                    </div>
+                    <div class="wt-detail-kv">
+                        <div class="wt-detail-kv__row">
+                            <span>Командная работа (сред.)</span>
+                            <span>{{ avg_collaboration }} / 10</span>
+                        </div>
+                        <div class="wt-detail-kv__row">
+                            <span>Надёжность (сред.)</span>
+                            <span>{{ avg_reliability }} / 10</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="wt-detail-card">
+                    <h2 class="wt-detail-card__title"><i class="fa-solid fa-list-check"></i> Задачи команды</h2>
+                    {% if recent_tasks %}
+                    <ul class="wt-detail-tasks">
+                        {% for task in recent_tasks %}
+                        <li class="wt-detail-task">
+                            <span class="wt-detail-task__code">{{ task.task_code }}</span>
+                            <span class="wt-detail-task__main">
+                                <span class="wt-detail-task__title">{{ task.title }}</span>
+                                <span class="wt-detail-task__meta">
+                                    {% include 'includes/task_type_pills.html' with task=task only %}
+                                    <span class="wa-cell-status">
+                                        <i class="fa-solid {{ task.status|status_icon }}"></i>
+                                        {{ task.status_ui_label }}
+                                    </span>
+                                </span>
+                            </span>
+                            <span class="wt-detail-task__rank">+{{ task.rank }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="wt-detail-card__empty">Команде пока не назначены задачи.</p>
+                    {% endif %}
+                    <a href="{% url 'worker_tasks' %}" class="wt-detail-card__link">Все мои задачи <i class="fa-solid fa-arrow-right"></i></a>
+                </section>
+            </div>
+
+            {% if task_types %}
+            <section class="wt-detail-types">
+                <h2 class="wt-detail-types__title">Состав задач по типам</h2>
+                <div class="wt-detail-types__chips">
+                    {% for t in task_types %}
+                    <span class="wt-tag wt-tag--type">{{ t.label }} <strong>×{{ t.count }}</strong></span>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+        </div>
+    </header>
+
+    <section class="wa-panel wt-panel">
+        <div class="wa-toolbar wt-toolbar">
+            <form class="wa-toolbar__search" method="get" action="">
+                <i class="fa-solid fa-magnifying-glass wt-search-icon"></i>
+                <input type="search" name="q" placeholder="Поиск участников…" value="{{ query }}">
+            </form>
+            <p class="wt-toolbar-hint">
+                <i class="fa-solid fa-user-group"></i>
+                {{ member_rows|length }} {% if member_rows|length == 1 %}участник{% else %}участников{% endif %}
+            </p>
+        </div>
+
+        <div class="wa-table-wrap">
+            <table class="wa-table wa-table--teammates">
+                <thead>
+                    <tr>
+                        <th>Участник</th>
+                        <th>Роль</th>
+                        <th>Рейтинг</th>
+                        <th>Командная работа</th>
+                        <th>Надёжность</th>
+                        <th>Задачи</th>
+                        <th>Статус</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in member_rows %}
+                    <tr class="{% if row.is_self %}wa-table__row--self{% endif %}">
+                        <td>
+                            <div class="wt-member">
+                                <span class="wt-member__avatar"><i class="fa-solid fa-user"></i></span>
+                                <span class="wt-member__text">
+                                    <span class="wt-member__name">{{ row.member.full_name|default:row.member.username }}</span>
+                                    <span class="wt-member__user">@{{ row.member.username }}</span>
+                                </span>
+                            </div>
+                        </td>
+                        <td><span class="wt-role">{{ row.badge }}</span></td>
+                        <td>
+                            <span class="wt-rating {% if row.member.rating < 0 %}wt-rating--neg{% endif %}">{{ row.member.rating }}</span>
+                        </td>
+                        <td class="wt-num">{{ row.member.collaboration_score|floatformat:1 }}<span class="wt-num__max">/10</span></td>
+                        <td class="wt-num">{{ row.member.reliability_score|floatformat:1 }}<span class="wt-num__max">/10</span></td>
+                        <td class="wt-tasks">
+                            <span><strong>{{ row.open_tasks }}</strong> открыто</span>
+                            <span class="wt-tasks__dot">·</span>
+                            <span><strong>{{ row.done_tasks }}</strong> завершено</span>
+                        </td>
+                        <td>
+                            {% if row.is_working %}
+                            <span class="wt-live wt-live--on"><i class="fa-solid fa-circle"></i> Работает</span>
+                            {% else %}
+                            <span class="wt-live">Не в сети</span>
+                            {% endif %}
+                            <span class="wt-live__time">Сегодня {{ row.today_display }}</span>
+                        </td>
+                        <td class="wt-action-cell">
+                            <a href="{% url 'worker_profile' row.member.username %}" class="wt-action-link">
+                                {% if row.is_self %}Мой профиль{% else %}Профиль{% endif %}
+                                <i class="fa-solid fa-chevron-right"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="wa-empty">Нет участников по вашему запросу.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+{% endblock %}

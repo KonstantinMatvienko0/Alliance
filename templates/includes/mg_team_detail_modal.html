@@ -1,0 +1,58 @@
+{% load static %}
+<div
+    class="wa-fmodal wa-fmodal--team-detail"
+    id="mg-team-detail-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="mg-team-detail-title"
+    aria-hidden="true"
+>
+    <div class="wa-fmodal__backdrop" data-team-detail-close></div>
+    <div class="wa-fmodal__box wa-fmodal__box--team-detail">
+        <header class="tdm-head tdm-team-head">
+            <div class="tdm-head__main">
+                <span class="tdm-head__code" id="mg-team-detail-label">Команда</span>
+                <span class="tdm-head__status mg-priority-pill" id="mg-team-detail-priority"></span>
+            </div>
+            <button type="button" class="wa-fmodal__close tdm-close" data-team-detail-close aria-label="Закрыть">&times;</button>
+        </header>
+
+        <div class="tdm-body">
+            <h2 class="tdm-title" id="mg-team-detail-title">Название</h2>
+            <p class="tdm-team-desc" id="mg-team-detail-description"></p>
+
+            <div class="tdm-metrics" id="mg-team-detail-metrics"></div>
+
+            <div class="tdm-types" id="mg-team-detail-types-wrap" hidden>
+                <span class="tdm-section-label">Типы задач</span>
+                <div class="tdm-types__pills" id="mg-team-detail-types"></div>
+            </div>
+
+            <div class="tdm-types" id="mg-team-detail-target-wrap" hidden>
+                <span class="tdm-section-label">Фокус команды</span>
+                <div class="tdm-types__pills" id="mg-team-detail-target"></div>
+            </div>
+
+            <section class="tdm-section">
+                <span class="tdm-section-label">Участники</span>
+                <ul class="tdm-team-members" id="mg-team-detail-members"></ul>
+            </section>
+
+            <section class="tdm-section tdm-section--notes">
+                <div class="tdm-notes-head">
+                    <span class="tdm-section-label">Заметка менеджера</span>
+                    <span class="tdm-notes-hint" id="mg-team-detail-notes-status" aria-live="polite"></span>
+                </div>
+                <textarea
+                    class="tdm-notes-input"
+                    id="mg-team-detail-notes"
+                    rows="3"
+                    maxlength="5000"
+                    placeholder="Внутренние заметки — видны только вам…"
+                ></textarea>
+            </section>
+        </div>
+
+        <footer class="tdm-foot" id="mg-team-detail-foot"></footer>
+    </div>
+</div>

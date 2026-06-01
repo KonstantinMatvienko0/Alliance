@@ -1,0 +1,160 @@
+{% extends 'worker/base_worker.html' %}
+{% load static task_ui %}
+
+{% block title %}Главная — Alliance{% endblock %}
+{% block nav_home %}wa-subnav__link--active{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/worker-home.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="wh-page">
+    <header class="wh-hero wa-panel">
+        <div class="wh-hero__main">
+            <p class="wh-hero__greeting">{{ greeting }}, <span class="wh-hero__name">{{ display_name }}</span></p>
+            <p class="wh-hero__meta">{{ today_label }} · {{ role_title }}{% if team %} · {{ team.name }}{% endif %}</p>
+        </div>
+        <div class="wh-hero__aside">
+            <div class="wh-rating">
+                <span class="wh-rating__label">Рейтинг</span>
+                <span class="wh-rating__value">{{ rating }}</span>
+            </div>
+            <a href="{% url 'ranked_statistic' %}" class="wh-hero__link">История и рейтинг <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+    </header>
+
+    <div class="wh-stats">
+        <a href="{% url 'worker_tasks' %}?status=open" class="wh-stat wa-panel">
+            <span class="wh-stat__value">{{ open_count }}</span>
+            <span class="wh-stat__label">К выполнению</span>
+        </a>
+        <a href="{% url 'worker_tasks' %}?status=in_progress" class="wh-stat wa-panel">
+            <span class="wh-stat__value wh-stat__value--accent">{{ in_progress_count }}</span>
+            <span class="wh-stat__label">В работе</span>
+        </a>
+        <div class="wh-stat wa-panel">
+            <span class="wh-stat__value{% if due_today_count %} wh-stat__value--warn{% endif %}">{{ due_today_count }}</span>
+            <span class="wh-stat__label">Срок сегодня</span>
+        </div>
+        <div class="wh-stat wa-panel{% if overdue_count %} wh-stat--alert{% endif %}">
+            <span class="wh-stat__value{% if overdue_count %} wh-stat__value--danger{% endif %}">{{ overdue_count }}</span>
+            <span class="wh-stat__label">Просрочено</span>
+        </div>
+        <div class="wh-stat wa-panel">
+            <span class="wh-stat__value">{{ completed_week }}</span>
+            <span class="wh-stat__label">За 7 дней</span>
+        </div>
+    </div>
+
+    <div class="wh-grid">
+        <section class="wa-panel wh-panel">
+            <div class="wh-panel__head">
+                <h2 class="wh-panel__title"><i class="fa-regular fa-calendar-check"></i> Фокус на сегодня</h2>
+                <a href="{% url 'worker_tasks' %}" class="wh-panel__link">Все задачи</a>
+            </div>
+            {% if today_tasks %}
+            <ul class="wh-task-list">
+                {% for task in today_tasks %}
+                <li class="wh-task-item{% if task.is_overdue %} wh-task-item--overdue{% endif %}">
+                    <div class="wh-task-item__main">
+                        <span class="wh-task-item__code">{{ task.task_code }}</span>
+                        <span class="wh-task-item__title">{{ task.title }}</span>
+                        <div class="wh-task-item__meta">
+                            {% include 'includes/task_type_pills.html' with task=task only %}
+                            <span class="wh-task-item__due">
+                                <i class="fa-regular fa-clock"></i>
+                                {{ task.due_date|date:"d.m H:i" }}
+                            </span>
+                            {% if task.is_overdue %}<span class="wh-task-item__badge">Просрочено</span>{% endif %}
+                        </div>
+                    </div>
+                    <div class="wh-task-item__actions">
+                        {% if task.status == 'open' %}
+                        <form action="{% url 'start_task' task.id %}" method="post">
+                            {% csrf_token %}
+                            <button type="submit" class="wh-btn wh-btn--primary">Начать</button>
+                        </form>
+                        {% elif task.status == 'in_progress' %}
+                        <form action="{% url 'complete_task' task.id %}" method="post">
+                            {% csrf_token %}
+                            <button type="submit" class="wh-btn wh-btn--ghost">Завершить</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="wh-empty">
+                <i class="fa-solid fa-mug-hot"></i>
+                <p>На сегодня активных дедлайнов нет — отличный день для планирования.</p>
+                <a href="{% url 'worker_tasks' %}" class="wh-btn wh-btn--primary">Открыть задачи</a>
+            </div>
+            {% endif %}
+        </section>
+
+        <div class="wh-side">
+            <section class="wa-panel wh-panel">
+                <div class="wh-panel__head">
+                    <h2 class="wh-panel__title"><i class="fa-solid fa-bolt"></i> В работе</h2>
+                </div>
+                {% if in_progress_tasks %}
+                <ul class="wh-mini-list">
+                    {% for task in in_progress_tasks %}
+                    <li class="wh-mini-item">
+                        <span class="wh-mini-item__title">{{ task.title }}</span>
+                        <span class="wh-mini-item__due">{{ task.due_date|date:"d.m H:i" }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="wh-panel__hint">Нет задач в работе — возьмите одну из списка слева.</p>
+                {% endif %}
+            </section>
+
+            <section class="wa-panel wh-panel">
+                <div class="wh-panel__head">
+                    <h2 class="wh-panel__title"><i class="fa-solid fa-compass"></i> Быстрые действия</h2>
+                </div>
+                <nav class="wh-quick">
+                    <a href="{% url 'worker_tasks' %}" class="wh-quick__item">
+                        <i class="fa-solid fa-list-check"></i>
+                        <span>Все задачи</span>
+                    </a>
+                    <a href="{% url 'ranked_statistic' %}" class="wh-quick__item">
+                        <i class="fa-solid fa-chart-line"></i>
+                        <span>Рейтинг</span>
+                    </a>
+                    <a href="{% url 'worker_profile' user.username %}" class="wh-quick__item">
+                        <i class="fa-regular fa-id-card"></i>
+                        <span>Профиль</span>
+                    </a>
+                    {% if user.teams.exists %}
+                    <a href="{% url 'worker_team' %}" class="wh-quick__item">
+                        <i class="fa-solid fa-people-group"></i>
+                        <span>Команды</span>
+                    </a>
+                    {% endif %}
+                </nav>
+            </section>
+
+            {% if open_tasks %}
+            <section class="wa-panel wh-panel">
+                <div class="wh-panel__head">
+                    <h2 class="wh-panel__title"><i class="fa-regular fa-circle"></i> Ожидают старта</h2>
+                </div>
+                <ul class="wh-mini-list">
+                    {% for task in open_tasks %}
+                    <li class="wh-mini-item">
+                        <span class="wh-mini-item__title">{{ task.title }}</span>
+                        <span class="wh-mini-item__due">{{ task.priority_label }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </section>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

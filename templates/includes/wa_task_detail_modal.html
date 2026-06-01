@@ -1,0 +1,51 @@
+{% load static %}
+<div
+    class="wa-fmodal wa-fmodal--task-detail"
+    id="wa-task-detail-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="wa-task-detail-title"
+    aria-hidden="true"
+>
+    <div class="wa-fmodal__backdrop" data-task-detail-close></div>
+    <div class="wa-fmodal__box wa-fmodal__box--task-detail">
+        <header class="tdm-head">
+            <div class="tdm-head__main">
+                <span class="tdm-head__code" id="wa-task-detail-code">TASK-0000</span>
+                <span class="tdm-head__status" id="wa-task-detail-status">
+                    <i class="fa-regular fa-circle" id="wa-task-detail-status-icon" aria-hidden="true"></i>
+                    <span id="wa-task-detail-status-label">Статус</span>
+                </span>
+            </div>
+            <button type="button" class="wa-fmodal__close tdm-close" data-task-detail-close aria-label="Закрыть">&times;</button>
+        </header>
+
+        <div class="tdm-body">
+            <h2 class="tdm-title" id="wa-task-detail-title">Название задачи</h2>
+
+            <div class="tdm-metrics" id="wa-task-detail-metrics"></div>
+
+            <div class="tdm-types" id="wa-task-detail-types-wrap" hidden>
+                <span class="tdm-section-label">Типы</span>
+                <div class="tdm-types__pills" id="wa-task-detail-types"></div>
+            </div>
+
+            <section class="tdm-section">
+                <span class="tdm-section-label">Описание</span>
+                <p class="tdm-desc" id="wa-task-detail-description">—</p>
+            </section>
+
+            <div class="tdm-grid" id="wa-task-detail-meta"></div>
+
+            <div class="tdm-link-wrap" id="wa-task-detail-link-wrap" hidden>
+                <span class="tdm-section-label">Ссылка</span>
+                <a href="#" class="tdm-link" id="wa-task-detail-link" target="_blank" rel="noopener noreferrer">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    <span id="wa-task-detail-link-text"></span>
+                </a>
+            </div>
+        </div>
+
+        <footer class="tdm-foot" id="wa-task-detail-foot" hidden></footer>
+    </div>
+</div>

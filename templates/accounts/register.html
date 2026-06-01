@@ -1,0 +1,99 @@
+{% extends 'registration/base_auth.html' %}
+{% load static %}
+
+{% block title %}Регистрация — Alliance{% endblock %}
+
+{% block content %}
+<div class="auth-shell">
+    <header class="auth-brand">
+        <img src="{% static 'img/alliance-logo.png' %}" alt="Alliance" class="auth-logo" width="48" height="48">
+        <h1 class="auth-heading">Alliance</h1>
+    </header>
+
+    <div class="auth-card">
+        <h2 class="auth-card__title">Регистрация</h2>
+        <p class="auth-card__subtitle">Создайте аккаунт работника</p>
+
+        {% if form.non_field_errors %}
+        <div class="auth-form-errors">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <form method="post" class="auth-form" novalidate>
+            {% csrf_token %}
+
+            <div class="auth-field">
+                <label class="auth-field__label" for="id_username">Имя пользователя</label>
+                <input
+                    type="text"
+                    name="username"
+                    id="id_username"
+                    class="auth-input{% if form.username.errors %} auth-input--error{% endif %}"
+                    placeholder="username"
+                    autocomplete="username"
+                    required
+                    maxlength="150"
+                    value="{{ form.username.value|default:'' }}"
+                >
+                {% for error in form.username.errors %}
+                <p class="auth-field__error">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+            <div class="auth-field">
+                <label class="auth-field__label" for="id_email">Email</label>
+                <input
+                    type="email"
+                    name="email"
+                    id="id_email"
+                    class="auth-input{% if form.email.errors %} auth-input--error{% endif %}"
+                    placeholder="m@example.com"
+                    autocomplete="email"
+                    required
+                    value="{{ form.email.value|default:'' }}"
+                >
+                {% for error in form.email.errors %}
+                <p class="auth-field__error">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+            <div class="auth-field">
+                <label class="auth-field__label" for="id_password1">Пароль</label>
+                <input
+                    type="password"
+                    name="password1"
+                    id="id_password1"
+                    class="auth-input{% if form.password1.errors %} auth-input--error{% endif %}"
+                    autocomplete="new-password"
+                    required
+                >
+                <p class="auth-field__hint">Не менее 8 символов</p>
+                {% for error in form.password1.errors %}
+                <p class="auth-field__error">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+            <div class="auth-field">
+                <label class="auth-field__label" for="id_password2">Подтверждение пароля</label>
+                <input
+                    type="password"
+                    name="password2"
+                    id="id_password2"
+                    class="auth-input{% if form.password2.errors %} auth-input--error{% endif %}"
+                    autocomplete="new-password"
+                    required
+                >
+                {% for error in form.password2.errors %}
+                <p class="auth-field__error">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+            <button type="submit" class="auth-btn auth-btn--primary">Зарегистрироваться</button>
+        </form>
+
+        <p class="auth-footer">
+            Уже есть аккаунт?
+            <a href="{% url 'login' %}" class="auth-footer__link">Войти</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

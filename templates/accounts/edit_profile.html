@@ -1,0 +1,83 @@
+{% extends 'worker/base_worker.html' %}
+{% load static %}
+
+{% block title %}Редактирование профиля — {{ worker.username }}{% endblock %}
+{% block nav_characteristics %}wa-subnav__link--active{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/manager-dashboard.css' %}">
+<link rel="stylesheet" href="{% static 'css/edit-profile.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="ep-page">
+    <a href="{% url 'worker_profile' worker.username %}" class="mg-home__link">
+        <i class="fa-solid fa-arrow-left"></i> Назад к профилю
+    </a>
+
+    <section class="ep-card">
+        <header class="ep-card__head">
+            <div class="ep-card__avatar"><i class="fa-regular fa-user"></i></div>
+            <div>
+                <h1 class="ep-card__title">Редактирование профиля</h1>
+                <p class="ep-card__sub">{{ worker.full_name|default:worker.username }} · @{{ worker.username }}</p>
+            </div>
+        </header>
+
+        <form method="post" class="ep-form">
+            {% csrf_token %}
+
+            <div class="ep-section" id="personal">
+                <h2 class="ep-section__title">Личные данные</h2>
+                <div class="ep-grid">
+                    <div class="mg-field">
+                        <label for="{{ form.full_name.id_for_label }}">Полное имя</label>
+                        {{ form.full_name }}
+                    </div>
+                    <div class="mg-field">
+                        <label for="{{ form.email.id_for_label }}">Email</label>
+                        {{ form.email }}
+                    </div>
+                    <div class="mg-field ep-grid__full">
+                        <label for="{{ form.phone.id_for_label }}">Телефон</label>
+                        {{ form.phone }}
+                    </div>
+                    <div class="mg-field ep-grid__full">
+                        <label for="{{ form.address.id_for_label }}">Адрес</label>
+                        {{ form.address }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="ep-section" id="social">
+                <h2 class="ep-section__title">Соцсети</h2>
+                <div class="ep-grid">
+                    <div class="mg-field ep-grid__full">
+                        <label for="{{ form.website.id_for_label }}"><i class="fa-solid fa-globe"></i> Сайт</label>
+                        {{ form.website }}
+                    </div>
+                    <div class="mg-field">
+                        <label for="{{ form.github.id_for_label }}"><i class="fa-brands fa-github"></i> GitHub</label>
+                        {{ form.github }}
+                    </div>
+                    <div class="mg-field">
+                        <label for="{{ form.twitter.id_for_label }}"><i class="fa-brands fa-twitter"></i> Twitter</label>
+                        {{ form.twitter }}
+                    </div>
+                    <div class="mg-field ep-grid__full">
+                        <label for="{{ form.telegram.id_for_label }}"><i class="fa-brands fa-telegram"></i> Telegram</label>
+                        {{ form.telegram }}
+                    </div>
+                </div>
+            </div>
+
+            <footer class="ep-form__footer">
+                <a href="{% url 'worker_profile' worker.username %}" class="mg-btn-ghost">Отмена</a>
+                <button type="submit" class="mg-btn-create">
+                    <i class="fa-solid fa-check"></i> Сохранить
+                </button>
+            </footer>
+        </form>
+    </section>
+</div>
+{% endblock %}

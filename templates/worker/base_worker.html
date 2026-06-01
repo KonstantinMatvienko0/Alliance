@@ -1,0 +1,116 @@
+{% load static %}
+{% with nav_user=profile_user|default:user %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Alliance{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/worker-app.css' %}">
+    <link rel="stylesheet" href="{% static 'css/manager-shell.css' %}">
+    <link rel="stylesheet" href="{% static 'css/alliance-motion.css' %}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="worker-app worker-app--worker">
+    <header class="wa-topbar wa-topbar--shell">
+        <div class="wa-topbar__start">
+            <a href="{% url 'dashboard' %}" class="wa-brand">
+                <img src="{% static 'img/alliance-logo.png' %}" alt="" class="wa-brand__logo" width="20" height="20">
+                Alliance
+            </a>
+        </div>
+
+        <div class="wa-topbar__center wa-clock" aria-live="polite">
+            <div class="wa-clock__time" id="wa-clock-time">--:--</div>
+            <div class="wa-clock__day" id="wa-clock-day">---</div>
+        </div>
+
+        <div class="wa-topbar__end">
+            <a href="{% url 'worker_profile' nav_user.username %}" class="wa-user">
+                <span>{{ nav_user.full_name|default:nav_user.username }}</span>
+                <span class="wa-user__avatar"><i class="fa-regular fa-user"></i></span>
+            </a>
+            <form action="{% url 'logout' %}" method="post" class="wa-logout-form">
+                {% csrf_token %}
+                <button type="submit" class="wa-logout" title="Выйти"><i class="fa-solid fa-right-from-bracket"></i></button>
+            </form>
+        </div>
+    </header>
+
+    <nav class="wa-subnav wa-subnav--shell">
+        <div class="wa-subnav__links">
+            <a href="{% url 'dashboard' %}" class="wa-subnav__link {% block nav_home %}{% endblock %}">Главная</a>
+            <a href="{% url 'worker_tasks' %}" class="wa-subnav__link {% block nav_tasks %}{% endblock %}">Задачи</a>
+            <a href="{% url 'ranked_statistic' %}" class="wa-subnav__link {% block nav_ranked %}{% endblock %}">Рейтинг</a>
+            <a href="{% url 'worker_profile' nav_user.username %}" class="wa-subnav__link {% block nav_characteristics %}{% endblock %}">Характеристики</a>
+            {% if nav_user.teams.exists %}
+            <a href="{% url 'worker_team' %}" class="wa-subnav__link {% block nav_team %}{% endblock %}">Команды</a>
+            {% else %}
+            <span class="wa-subnav__link wa-subnav__link--disabled">Команды</span>
+            {% endif %}
+        </div>
+        {% if user.role == 'worker' %}
+        <div class="wa-subnav__actions">
+            <button
+                type="button"
+                id="wa-work-timer-btn"
+                class="wa-work-timer wa-work-timer--subnav"
+                data-status-url="{% url 'work_timer_status' %}"
+                data-toggle-url="{% url 'work_timer_toggle' %}"
+                data-stop-url="{% url 'work_timer_stop' %}"
+                data-csrf="{{ csrf_token }}"
+                aria-pressed="false"
+                title="Запуск / остановка таймера"
+            >
+                <span class="wa-work-timer__label" id="wa-work-timer-label">начать работу</span>
+                <span class="wa-work-timer__ring" id="wa-work-timer-ring">
+                    <span class="wa-work-timer__display" id="wa-work-timer-display">00:00:00</span>
+                </span>
+            </button>
+        </div>
+        {% endif %}
+    </nav>
+
+    <main class="wa-main">
+        {% block content %}{% endblock %}
+    </main>
+
+    <script>
+        (function () {
+            const timeEl = document.getElementById('wa-clock-time');
+            const dayEl = document.getElementById('wa-clock-day');
+            const days = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
+            function tick() {
+                const now = new Date();
+                const h = String(now.getHours()).padStart(2, '0');
+                const m = String(now.getMinutes()).padStart(2, '0');
+                timeEl.textContent = h + ':' + m;
+                dayEl.textContent = days[now.getDay()];
+            }
+            tick();
+            setInterval(tick, 1000 * 30);
+
+            const table = document.getElementById('wa-task-table');
+            const selectedEl = document.getElementById('wa-selected-count');
+            if (table && selectedEl) {
+                const checkboxes = table.querySelectorAll('.wa-check');
+                function updateSelected() {
+                    const n = [...checkboxes].filter(c => c.checked).length;
+                    selectedEl.textContent = n;
+                }
+                checkboxes.forEach(c => c.addEventListener('change', updateSelected));
+            }
+        })();
+    </script>
+    <script src="{% static 'js/work-timer.js' %}"></script>
+    <script src="{% static 'js/filter-modal.js' %}"></script>
+    <script src="{% static 'js/actions-menu.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
+{% endwith %}

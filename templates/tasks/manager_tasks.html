@@ -1,0 +1,203 @@
+{% extends 'manager/base_manager.html' %}
+{% load static task_ui %}
+
+{% block title %}Задачи — Alliance{% endblock %}
+{% block nav_tasks %}wa-subnav__link--active{% endblock %}
+{% block body_class %}mg-tasks-page{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/manager-dashboard.css' %}">
+<link rel="stylesheet" href="{% static 'css/task-detail-modal.css' %}">
+<link rel="stylesheet" href="{% static 'css/mg-assign-picker.css' %}">
+<link rel="stylesheet" href="{% static 'css/deadline-picker.css' %}">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="mg-page mg-tasks-canvas">
+    <section class="wa-panel mg-tasks-panel mg-tasks-panel--canvas">
+        <div class="mg-tasks-panel__head mg-tasks-panel__head--row">
+            <div>
+                <h1 class="mg-tasks-panel__title">Задачи</h1>
+                <p class="mg-tasks-panel__meta">{{ page_obj.paginator.count }} в списке</p>
+            </div>
+            <button type="button" class="mg-btn-create" data-fmodal-open="manager-create-task">
+                <i class="fa-solid fa-plus"></i> Создать задачу
+            </button>
+        </div>
+
+        <div class="wa-toolbar mg-toolbar">
+            <form class="mg-toolbar-search" method="get" action="{% url 'manager_tasks' %}">
+                <i class="fa-solid fa-magnifying-glass mg-toolbar-search__icon"></i>
+                <input
+                    type="search"
+                    name="q"
+                    class="mg-toolbar-search__input"
+                    placeholder="Фильтр задач..."
+                    value="{{ query }}"
+                >
+                {% include 'includes/query_type_hidden.html' with type_filters=type_filters only %}
+                <input type="hidden" name="per_page" value="{{ per_page }}">
+            </form>
+
+            <div class="mg-toolbar__filters">
+                <button
+                    type="button"
+                    class="mg-filter-btn wa-filter-trigger {% if type_filters %}wa-filter-trigger--active{% endif %}"
+                    data-fmodal-open="manager-task-filters"
+                    aria-haspopup="dialog"
+                >
+                    <span class="mg-filter-btn__plus">+</span> Фильтры
+                </button>
+                {% for type_code in type_filters %}
+                <span class="wa-filter-tag">Тип: {{ type_code }}</span>
+                {% endfor %}
+                {% if type_filters %}
+                <a href="{% url 'manager_tasks' %}?q={{ query|urlencode }}&per_page={{ per_page }}" class="wa-filter-tag wa-filter-tag--dismiss" title="Сбросить фильтры по типу">
+                    Сбросить типы <i class="fa-solid fa-xmark"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="wa-table-wrap mg-tasks-table-wrap">
+            <table class="wa-table" id="mg-task-table">
+                <thead>
+                    <tr>
+                        <th style="width:40px"><input type="checkbox" class="wa-check" id="mg-check-all" aria-label="Выбрать все"></th>
+                        <th>Задача</th>
+                        <th>Название</th>
+                        <th>Тип</th>
+                        <th>Ранг</th>
+                        <th>Исполнитель</th>
+                        <th>Команда</th>
+                        <th>Статус</th>
+                        <th style="width:48px"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for task in page_obj %}
+                    <tr class="wa-task-row--openable" data-task-id="{{ task.pk }}" role="button" tabindex="0" aria-label="Открыть {{ task.task_code }}">
+                        <td><input type="checkbox" class="wa-check" aria-label="Выбрать {{ task.task_code }}"></td>
+                        <td class="wa-task-id">{{ task.task_code }}</td>
+                        <td>
+                            <span class="wa-title-cell__desc">{{ task.title }}</span>
+                            {% if task.description %}
+                            <span class="wa-title-cell__meta">{{ task.description|truncatechars:60 }}</span>
+                            {% endif %}
+                            {% if task.link %}
+                            <a href="{{ task.link }}" class="mg-task-link" target="_blank" rel="noopener noreferrer" title="Открыть ссылку">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                            </a>
+                            {% endif %}
+                            {% if task.is_overdue %}<span class="wa-badge-overdue">Просрочено</span>{% endif %}
+                        </td>
+                        <td>{% include 'includes/task_type_pills.html' with task=task only %}</td>
+                        <td><span class="mg-rank--pos">{{ task.rank }}</span></td>
+                        <td>
+                            {% if task.assigned_to %}
+                            <a href="{% url 'worker_profile' task.assigned_to.username %}" class="wa-link">
+                                {{ task.assigned_to.full_name|default:task.assigned_to.username }}
+                            </a>
+                            {% else %}—{% endif %}
+                        </td>
+                        <td>
+                            {% if task.team %}
+                            <a href="{% url 'team_detail' task.team.pk %}" class="wa-link">{{ task.team.name }}</a>
+                            {% else %}—{% endif %}
+                        </td>
+                        <td>
+                            <span class="wa-cell-status">
+                                <i class="fa-solid {{ task.status|status_icon }}"></i>
+                                {{ task.status_ui_label }}
+                            </span>
+                        </td>
+                        <td>
+                            {% include 'includes/mg_task_actions.html' %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="wa-empty mg-empty">
+                            <div class="mg-empty__icon"><i class="fa-regular fa-clipboard"></i></div>
+                            <p class="mg-empty__title">Задач пока нет</p>
+                            <p class="mg-empty__text">Создайте первую задачу, чтобы начать.</p>
+                            <button type="button" class="mg-btn-create mg-btn-create--sm" data-fmodal-open="manager-create-task">
+                                <i class="fa-solid fa-plus"></i> Создать задачу
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <footer class="wa-footer">
+            <span><span id="mg-selected-count">0</span> из {{ page_obj.paginator.count }} строк выбрано</span>
+            <form method="get" class="wa-footer__per-page">
+                {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+                {% include 'includes/query_type_hidden.html' with type_filters=type_filters only %}
+                <label>Строк на странице
+                    <select name="per_page" onchange="this.form.submit()">
+                        <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
+                        <option value="20" {% if per_page == 20 %}selected{% endif %}>20</option>
+                        <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
+                    </select>
+                </label>
+            </form>
+            <nav class="wa-pagination" aria-label="Пагинация">
+                {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}&q={{ query|urlencode }}&per_page={{ per_page }}{% for t in type_filters %}&type={{ t }}{% endfor %}" class="wa-pagination__btn">&lt;</a>
+                {% else %}
+                <span class="wa-pagination__btn wa-pagination__btn--disabled">&lt;</span>
+                {% endif %}
+                <span>Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages|default:1 }}</span>
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}&q={{ query|urlencode }}&per_page={{ per_page }}{% for t in type_filters %}&type={{ t }}{% endfor %}" class="wa-pagination__btn">&gt;</a>
+                {% else %}
+                <span class="wa-pagination__btn wa-pagination__btn--disabled">&gt;</span>
+                {% endif %}
+            </nav>
+        </footer>
+    </section>
+</div>
+
+{{ tasks_detail_map|json_script:"wa-tasks-detail-data" }}
+{% include 'includes/wa_task_detail_modal.html' %}
+{% endblock %}
+
+{% block modals %}
+<div class="wa-fmodal" id="manager-task-filters" role="dialog" aria-modal="true" aria-labelledby="manager-task-filters-title" aria-hidden="true">
+    <div class="wa-fmodal__backdrop" data-fmodal-close></div>
+    <div class="wa-fmodal__box">
+        <header class="wa-fmodal__header">
+            <h3 class="wa-fmodal__title" id="manager-task-filters-title">Фильтры</h3>
+            <button type="button" class="wa-fmodal__close" data-fmodal-close aria-label="Закрыть">&times;</button>
+        </header>
+        <form method="get" action="{% url 'manager_tasks' %}" class="wa-fmodal__form">
+            {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+            <input type="hidden" name="per_page" value="{{ per_page }}">
+            <div class="wa-fmodal__body">
+                {% include 'includes/wa_filter_fieldset_multi.html' with group_title='Тип задачи' field_name='type' choices=type_choices selected=type_filters hint='Выберите один или несколько типов' only %}
+            </div>
+            <footer class="wa-fmodal__footer">
+                <a href="{% url 'manager_tasks' %}?per_page={{ per_page }}{% if query %}&q={{ query|urlencode }}{% endif %}" class="wa-fmodal__btn wa-fmodal__btn--ghost">Сбросить</a>
+                <button type="button" class="wa-fmodal__btn wa-fmodal__btn--ghost" data-fmodal-cancel>Отмена</button>
+                <button type="submit" class="wa-fmodal__btn wa-fmodal__btn--primary">Применить</button>
+            </footer>
+        </form>
+    </div>
+</div>
+
+{% include 'includes/mg_task_modal.html' with modal_id='manager-create-task' modal_title='Создать задачу' form_type='create' submit_label='Создать задачу' form=form auto_open=show_create_modal prefill_worker=prefill_worker prefill_team=prefill_team %}
+{% if edit_form %}
+{% include 'includes/mg_task_modal.html' with modal_id='manager-edit-task' modal_title='Редактировать задачу' form_type='edit' submit_label='Сохранить' form=edit_form task_id=edit_task.pk auto_open=show_edit_modal %}
+{% endif %}
+{% endblock modals %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="{% static 'js/task-deadline-picker.js' %}"></script>
+<script src="{% static 'js/mg-assign-picker.js' %}"></script>
+<script src="{% static 'js/task-detail-modal.js' %}"></script>
+{% endblock %}

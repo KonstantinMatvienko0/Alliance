@@ -1,0 +1,17 @@
+<div class="wa-fmodal__group">
+    {% if group_title %}
+    <div class="wa-fmodal__group-title">{{ group_title }}</div>
+    {% endif %}
+    <div class="wa-fmodal__options">
+        <label class="wa-fmodal__option">
+            <input type="radio" name="{{ field_name }}" value="" {% if not selected %}checked{% endif %}>
+            <span>{{ all_label|default:"Все" }}</span>
+        </label>
+        {% for value, label in choices %}
+        <label class="wa-fmodal__option">
+            <input type="radio" name="{{ field_name }}" value="{{ value }}" {% if selected == value %}checked{% endif %}>
+            <span>{{ label }}</span>
+        </label>
+        {% endfor %}
+    </div>
+</div>

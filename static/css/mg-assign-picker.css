@@ -1,0 +1,161 @@
+.mg-assign-picker {
+    margin-bottom: 0.875rem;
+    padding: 0.65rem 0.75rem;
+    border: 1px solid var(--wa-border);
+    border-radius: var(--wa-radius);
+    background: var(--wa-surface);
+}
+
+.mg-assign-picker__label {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #d4d4d8;
+    margin-bottom: 0.45rem;
+}
+
+.mg-assign-picker__search {
+    margin-bottom: 0.5rem;
+    background-color: var(--wa-surface);
+    color: var(--wa-text);
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.mg-assign-picker__tabs {
+    display: flex;
+    gap: 0.35rem;
+    margin-bottom: 0.5rem;
+}
+
+.mg-assign-picker__tab {
+    height: 28px;
+    padding: 0 0.55rem;
+    border: 1px solid var(--wa-border);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--wa-muted);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.mg-assign-picker__tab--active {
+    border-color: var(--wa-accent);
+    color: var(--wa-accent);
+    background: rgba(193, 255, 114, 0.08);
+}
+
+.mg-assign-picker__list {
+    max-height: 140px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.mg-assign-picker__item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.45rem 0.5rem;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--wa-text);
+    text-align: left;
+    font-family: inherit;
+    font-size: 0.8125rem;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s;
+}
+
+.mg-assign-picker__item:hover {
+    background: var(--wa-surface-2);
+}
+
+.mg-assign-picker__item.is-selected {
+    border-color: var(--wa-accent);
+    background: rgba(193, 255, 114, 0.1);
+}
+
+.mg-assign-picker__item-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+}
+
+.mg-assign-picker__item-name {
+    display: block;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.mg-assign-picker__item-meta {
+    display: block;
+    font-size: 0.6875rem;
+    color: var(--wa-muted);
+    margin: 0;
+    padding-top: 0.1rem;
+    line-height: 1.4;
+}
+
+.mg-assign-picker__score {
+    flex-shrink: 0;
+    min-width: 36px;
+    height: 22px;
+    padding: 0 0.35rem;
+    border-radius: 4px;
+    background: var(--wa-surface-2);
+    color: var(--wa-accent);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mg-assign-picker__score--high {
+    background: rgba(193, 255, 114, 0.2);
+}
+
+.mg-assign-picker__badge {
+    display: inline-block;
+    margin-left: 0.25rem;
+    padding: 0 0.3rem;
+    border-radius: 3px;
+    background: rgba(193, 255, 114, 0.15);
+    color: var(--wa-accent);
+    font-size: 0.625rem;
+    font-weight: 600;
+    vertical-align: middle;
+}
+
+.mg-assign-picker__empty {
+    padding: 0.75rem;
+    text-align: center;
+    color: var(--wa-muted);
+    font-size: 0.75rem;
+}
+
+.mg-assign-picker__selected {
+    margin: 0.4rem 0 0;
+    font-size: 0.6875rem;
+    color: var(--wa-accent);
+}
+
+.mg-assign-picker__clear {
+    margin-left: 0.35rem;
+    color: var(--wa-muted);
+    cursor: pointer;
+    text-decoration: underline;
+    background: none;
+    border: none;
+    font-size: inherit;
+    font-family: inherit;
+}

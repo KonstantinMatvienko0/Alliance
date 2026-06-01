@@ -1,0 +1,172 @@
+{% extends 'worker/base_worker.html' %}
+{% load static task_ui %}
+
+{% block title %}Рейтинг — Alliance{% endblock %}
+
+{% block nav_ranked %}wa-subnav__link--active{% endblock %}
+{% block nav_tasks %}{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/ranked-statistic.css' %}">
+<link rel="stylesheet" href="{% static 'css/task-detail-modal.css' %}">
+{% endblock %}
+
+{% block content %}
+<section class="wa-panel wa-panel--ranked">
+    <div class="wa-toolbar wa-toolbar--ranked">
+        <div class="wa-toolbar__main">
+            <form class="wa-toolbar__search" method="get" action="">
+                <input type="search" name="q" placeholder="Фильтр задач..." value="{{ query }}">
+                {% include 'includes/query_type_hidden.html' with type_filters=type_filters only %}
+                {% if result_filter %}<input type="hidden" name="result" value="{{ result_filter }}">{% endif %}
+                <input type="hidden" name="per_page" value="{{ per_page }}">
+            </form>
+
+            <button
+                type="button"
+                class="wa-chip wa-filter-trigger {% if type_filters or result_filter %}wa-filter-trigger--active{% endif %}"
+                data-fmodal-open="ranked-task-filters"
+                aria-haspopup="dialog"
+            >
+                <span class="wa-chip__plus">+</span> Фильтры
+            </button>
+
+            <div class="wa-filter-tags">
+                {% for type_code in type_filters %}
+                <span class="wa-filter-tag">Тип: {{ type_code }}</span>
+                {% endfor %}
+                {% if result_filter %}
+                <span class="wa-filter-tag">
+                    Результат:
+                    {% for value, label in result_choices %}{% if result_filter == value %}{{ label }}{% endif %}{% endfor %}
+                </span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="wa-ranked-summary" aria-label="Сводка">
+            <span class="wa-ranked-summary__stat">
+                <span class="wa-ranked-summary__label">Ваш рейтинг</span>
+                <span class="wa-ranked-summary__value wa-ranked-summary__value--accent">{{ worker_rating }}</span>
+            </span>
+            <span class="wa-ranked-summary__stat">
+                <span class="wa-ranked-summary__label">Закрытые задачи</span>
+                <span class="wa-ranked-summary__value">{{ page_obj.paginator.count }}</span>
+            </span>
+        </div>
+    </div>
+
+    <div class="wa-table-wrap">
+        <table class="wa-table wa-table--ranked" id="wa-task-table">
+            <thead>
+                <tr>
+                    <th style="width:40px"><input type="checkbox" class="wa-check" id="wa-check-all" aria-label="Выбрать все"></th>
+                    <th>Задача</th>
+                    <th>Описание</th>
+                    <th>Тип</th>
+                    <th>Ранг задачи</th>
+                    <th>Ваш рейтинг</th>
+                    <th>Дата</th>
+                    <th style="width:48px"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in page_obj %}
+                {% with task=row.task %}
+                <tr class="wa-task-row--openable" data-task-id="{{ task.pk }}" role="button" aria-label="Открыть {{ task.task_code }}">
+                    <td><input type="checkbox" class="wa-check" aria-label="Выбрать {{ task.task_code }}"></td>
+                    <td class="wa-task-id">{{ task.task_code }}</td>
+                    <td>
+                        <div class="wa-ranked-desc__title">{{ task.title }}</div>
+                        <div class="wa-ranked-desc__text">{{ task.description|truncatechars:110 }}</div>
+                        {% if task.team %}<div class="wa-ranked-desc__meta">Команда: {{ task.team.name }}</div>{% endif %}
+                    </td>
+                    <td>{% include 'includes/task_type_pills.html' with task=task only %}</td>
+                    <td>
+                        <span class="wa-rank-change {% if row.task_rank_signed >= 0 %}wa-rank-change--positive{% else %}wa-rank-change--negative{% endif %}">
+                            {% if row.task_rank_signed >= 0 %}+{% endif %}{{ row.task_rank_signed }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="wa-rank-change {% if row.worker_rating_change >= 0 %}wa-rank-change--positive{% else %}wa-rank-change--negative{% endif %}">
+                            {% if row.worker_rating_change >= 0 %}+{% endif %}{{ row.worker_rating_change }}
+                        </span>
+                    </td>
+                    <td class="wa-ranked-date">{% if task.completed_at %}{{ task.completed_at|date:'d.m.Y H:i' }}{% else %}—{% endif %}</td>
+                    <td>
+                        <div class="wa-actions">
+                            <button type="button" class="wa-actions__toggle" aria-label="Действия"><i class="fa-solid fa-ellipsis"></i></button>
+                            <div class="wa-actions__menu">
+                                <a href="{% url 'worker_profile' worker.username %}" class="wa-actions__item">Характеристики</a>
+                                <a href="{% url 'worker_tasks' %}" class="wa-actions__item">Открытые задачи</a>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% endwith %}
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="wa-empty">Завершённых задач не найдено.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="wa-fmodal" id="ranked-task-filters" role="dialog" aria-modal="true" aria-labelledby="ranked-task-filters-title" aria-hidden="true">
+        <div class="wa-fmodal__backdrop" data-fmodal-close></div>
+        <div class="wa-fmodal__box">
+            <header class="wa-fmodal__header">
+                <h3 class="wa-fmodal__title" id="ranked-task-filters-title">Фильтры</h3>
+                <button type="button" class="wa-fmodal__close" data-fmodal-close aria-label="Закрыть">&times;</button>
+            </header>
+            <form method="get" class="wa-fmodal__form">
+                <input type="hidden" name="q" value="{{ query }}">
+                <input type="hidden" name="per_page" value="{{ per_page }}">
+                <div class="wa-fmodal__body">
+                    {% include 'includes/wa_filter_fieldset_multi.html' with group_title='Тип' field_name='type' selected=type_filters choices=type_choices hint='Выберите один или несколько типов' only %}
+                    {% include 'includes/wa_filter_fieldset.html' with group_title='Результат' field_name='result' selected=result_filter choices=result_choices all_label='Все результаты' only %}
+                </div>
+                <footer class="wa-fmodal__footer">
+                    <button type="button" class="wa-fmodal__btn wa-fmodal__btn--ghost" data-fmodal-clear>Сбросить</button>
+                    <button type="button" class="wa-fmodal__btn wa-fmodal__btn--ghost" data-fmodal-cancel>Отмена</button>
+                    <button type="submit" class="wa-fmodal__btn wa-fmodal__btn--primary">Применить</button>
+                </footer>
+            </form>
+        </div>
+    </div>
+
+    <footer class="wa-footer">
+        <span><span id="wa-selected-count">0</span> из {{ page_obj.paginator.count }} строк выбрано.</span>
+        <div class="wa-footer__right">
+            <form method="get" class="wa-footer__per-page">
+                <input type="hidden" name="q" value="{{ query }}">
+                {% include 'includes/query_type_hidden.html' with type_filters=type_filters only %}
+                <input type="hidden" name="result" value="{{ result_filter }}">
+                <label>Строк на странице</label>
+                <select name="per_page" onchange="this.form.submit()">
+                    <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
+                    <option value="20" {% if per_page == 20 %}selected{% endif %}>20</option>
+                    <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
+                </select>
+            </form>
+            <span>Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages|default:1 }}</span>
+            <nav class="wa-pagination" aria-label="Пагинация">
+                {% if page_obj.has_previous %}
+                <a href="?{% url_replace page=page_obj.previous_page_number %}" aria-label="Предыдущая"><i class="fa-solid fa-angle-left"></i></a>
+                {% endif %}
+                {% if page_obj.has_next %}
+                <a href="?{% url_replace page=page_obj.next_page_number %}" aria-label="Следующая"><i class="fa-solid fa-angle-right"></i></a>
+                {% endif %}
+            </nav>
+        </div>
+    </footer>
+</section>
+
+{{ tasks_detail_map|json_script:"wa-tasks-detail-data" }}
+{% include 'includes/wa_task_detail_modal.html' %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/task-detail-modal.js' %}"></script>
+{% endblock %}

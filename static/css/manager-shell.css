@@ -1,0 +1,128 @@
+/* App shell — top bar grid (manager + worker) */
+
+.worker-app--manager .wa-topbar--shell,
+.worker-app--worker .wa-topbar--shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    column-gap: 1.5rem;
+    padding: 0.5rem 1.75rem 0.45rem;
+    background: var(--wa-bar-bg);
+    border-bottom: none;
+}
+
+.worker-app--manager .wa-topbar__start,
+.worker-app--worker .wa-topbar__start {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    min-width: 0;
+}
+
+.worker-app--manager .wa-search--wide,
+.worker-app--worker .wa-search--wide {
+    flex: 0 1 320px;
+    max-width: 320px;
+    min-width: 160px;
+    width: 100%;
+}
+
+.worker-app--manager .wa-topbar__center,
+.worker-app--worker .wa-topbar__center {
+    justify-self: center;
+}
+
+.worker-app--manager .wa-topbar__end,
+.worker-app--worker .wa-topbar__end {
+    justify-self: end;
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+}
+
+.worker-app--manager .wa-userblock {
+    margin-left: 0;
+}
+
+.worker-app--manager .wa-subnav--shell,
+.worker-app--worker .wa-subnav--shell {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.75rem;
+    padding: 1rem 1.75rem 0.625rem;
+    background: var(--wa-bg);
+    border-bottom: none;
+}
+
+.worker-app--manager .wa-subnav__links,
+.worker-app--worker .wa-subnav__links {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2.5rem;
+}
+
+.worker-app--manager .wa-subnav__actions,
+.worker-app--worker .wa-subnav__actions {
+    position: absolute;
+    right: 1.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+}
+
+.worker-app--manager .wa-subnav--shell .wa-subnav__link,
+.worker-app--worker .wa-subnav--shell .wa-subnav__link {
+    border-left: none;
+    border-right: none;
+}
+
+.worker-app--manager .wa-subnav--shell .wa-subnav__link:not(:last-child)::before,
+.worker-app--manager .wa-subnav--shell .wa-subnav__link:not(:last-child)::after,
+.worker-app--worker .wa-subnav--shell .wa-subnav__link:not(:last-child)::before,
+.worker-app--worker .wa-subnav--shell .wa-subnav__link:not(:last-child)::after {
+    content: none;
+}
+
+.worker-app--manager .wa-main--manager {
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 1.5rem 1.75rem 2.5rem;
+}
+
+.worker-app--manager .mg-tasks-page .wa-main--manager {
+    max-width: none;
+    padding: 1.25rem 1.5rem 2rem;
+}
+
+.worker-app--worker .wa-main {
+    max-width: 1320px;
+    padding: 1.5rem 1.75rem 2.5rem;
+}
+
+@media (max-width: 900px) {
+    .worker-app--worker .wa-subnav__links {
+        max-width: calc(100% - 7rem);
+    }
+
+    .worker-app--manager .wa-topbar--shell,
+    .worker-app--worker .wa-topbar--shell {
+        grid-template-columns: 1fr auto;
+        grid-template-rows: auto auto;
+    }
+
+    .worker-app--manager .wa-topbar__center,
+    .worker-app--worker .wa-topbar__center {
+        grid-column: 2;
+        grid-row: 1;
+    }
+
+    .worker-app--manager .wa-topbar__end,
+    .worker-app--worker .wa-topbar__end {
+        grid-column: 2;
+        grid-row: 1;
+    }
+}

@@ -1,0 +1,425 @@
+{% extends 'manager/base_manager.html' %}
+{% load static %}
+
+{% block title %}{{ title }} — Alliance{% endblock %}
+{% block nav_teams %}wa-subnav__link--active{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/manager-dashboard.css' %}">
+<link rel="stylesheet" href="{% static 'css/manager-people.css' %}">
+<link rel="stylesheet" href="{% static 'css/team-form.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="mg-page mg-form-page">
+    <a href="{% if team %}{% url 'team_detail' team.id %}{% else %}{% url 'team_list' %}{% endif %}" class="mg-back-link">
+        <span class="mg-back-link__icon" aria-hidden="true"><i class="fa-solid fa-arrow-left"></i></span>
+        <span class="mg-back-link__text">Назад</span>
+    </a>
+
+    <header class="mg-people-hero mg-form-page__hero">
+        <div>
+            <h1 class="mg-people-hero__title">{{ title }}</h1>
+            <p class="mg-people-hero__sub">Подбор по типам задач, навыкам, совместимости и истории выполнения</p>
+        </div>
+    </header>
+
+    <form method="post" id="teamForm" class="mg-create-modal-form">
+        {% csrf_token %}
+
+        <section class="mg-form-panel">
+            <h2 class="mg-form-panel__title">Информация о команде</h2>
+            <div class="mg-field">
+                <label for="id_name">Название</label>
+                {{ form.name }}
+                {% if form.name.errors %}<ul class="mg-field__errors">{% for e in form.name.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+            </div>
+            <div class="mg-field">
+                <label for="id_description">Описание</label>
+                {{ form.description }}
+            </div>
+            <div class="mg-field mg-field--last mg-field--types">
+                <span class="mg-filter-bar__label">Типы задач команды</span>
+                <p class="mg-form-panel__hint mg-form-panel__hint--tight">Под какие задачи собираете команду — от этого зависит оценка кандидатов.</p>
+                <div class="mg-type-options mg-type-options--form" id="teamTargetTypes">
+                    {% for checkbox in form.target_types %}
+                    <label class="mg-type-option">
+                        {{ checkbox.tag }}
+                        <span>{{ checkbox.choice_label }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+
+        <section class="mg-form-panel">
+            <h2 class="mg-form-panel__title">Навыки и фильтр</h2>
+            <p class="mg-form-panel__hint">Навыки сужают список; оценка учитывает пробелы в текущем составе.</p>
+            <div class="mg-filter-bar">
+                <div class="mg-field mg-filter-bar__skill">
+                    <span class="mg-filter-bar__label" id="skillFilterLabelTitle">Навыки</span>
+                    <div class="mg-skill-multi" id="skillFilterPicker">
+                        <button
+                            type="button"
+                            class="mg-skill-multi__trigger"
+                            id="skillFilterTrigger"
+                            aria-expanded="false"
+                            aria-haspopup="listbox"
+                            aria-labelledby="skillFilterLabelTitle skillFilterTrigger"
+                        >
+                            <span class="mg-skill-multi__value" id="skillFilterDisplay">Все навыки</span>
+                            <i class="fa-solid fa-chevron-down mg-skill-multi__chevron" aria-hidden="true"></i>
+                        </button>
+                        <div class="mg-skill-multi__menu" id="skillFilterMenu" role="listbox" hidden>
+                            {% for skill in all_skills %}
+                            <label class="mg-skill-multi__item">
+                                <input
+                                    type="checkbox"
+                                    class="mg-skill-multi__check"
+                                    value="{{ skill.id }}"
+                                    data-label="{{ skill.name }}"
+                                >
+                                <span class="mg-skill-multi__item-text">{{ skill.name }} ({{ skill.get_skill_type_display }})</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="mg-filter-bar__apply">
+                    <button type="button" id="applyFilter" class="mg-btn-create mg-filter-bar__apply-btn">Обновить</button>
+                </div>
+            </div>
+            <button type="button" id="resetFilter" class="mg-btn-ghost mg-filter-bar__reset">Сбросить навыки</button>
+        </section>
+
+        <section class="mg-form-panel">
+            <h2 class="mg-form-panel__title">Участники</h2>
+            <p class="mg-form-panel__hint">Сотрудник может входить в несколько команд. Выберите участников — рекомендации пересчитаются под текущий состав.</p>
+            <div id="rosterScoreBar" class="mg-roster-score" hidden>
+                <span class="mg-roster-score__label">Готовность состава</span>
+                <span class="mg-roster-score__value" id="rosterScoreValue">—</span>
+                <span class="mg-roster-score__hint" id="rosterScoreHint"></span>
+            </div>
+            <div id="workersContainer" class="mg-candidates">
+                <div class="mg-members-grid__loading" id="workersLoading"><i class="fa-solid fa-spinner fa-spin"></i> Загрузка…</div>
+                <div id="recommendedSection" class="mg-candidates__section" hidden>
+                    <h3 class="mg-candidates__title">Рекомендуемые</h3>
+                    <div id="recommendedGrid" class="mg-members-grid"></div>
+                </div>
+                <div id="allSection" class="mg-candidates__section" hidden>
+                    <h3 class="mg-candidates__title" id="allSectionTitle">Остальные кандидаты</h3>
+                    <div id="allGrid" class="mg-members-grid"></div>
+                </div>
+            </div>
+        </section>
+
+        <div class="mg-form-actions">
+            <a href="{% if team %}{% url 'team_detail' team.id %}{% else %}{% url 'team_list' %}{% endif %}" class="mg-btn-ghost">Отмена</a>
+            <button type="submit" class="mg-btn-create">
+                <i class="fa-solid fa-check"></i> Сохранить команду
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    let resetSkillPicker = null;
+    let getSelectedSkillIds = function () { return []; };
+
+    (function initSkillMultiPicker() {
+        const picker = document.getElementById('skillFilterPicker');
+        const trigger = document.getElementById('skillFilterTrigger');
+        const display = document.getElementById('skillFilterDisplay');
+        const menu = document.getElementById('skillFilterMenu');
+        if (!picker || !trigger || !menu) return;
+
+        const checks = menu.querySelectorAll('.mg-skill-multi__check');
+        let menuHome = null;
+
+        function updateDisplay() {
+            const selected = Array.from(checks).filter(function (c) { return c.checked; });
+            if (!selected.length) {
+                display.textContent = 'Все навыки';
+                return;
+            }
+            if (selected.length === 1) {
+                display.textContent = selected[0].dataset.label || '1 навык';
+                return;
+            }
+            display.textContent = selected.length + ' навыка';
+        }
+
+        getSelectedSkillIds = function () {
+            return Array.from(checks)
+                .filter(function (c) { return c.checked; })
+                .map(function (c) { return c.value; });
+        };
+
+        function closeMenu() {
+            trigger.setAttribute('aria-expanded', 'false');
+            picker.classList.remove('is-open');
+            menu.hidden = true;
+            if (menuHome && menuHome.parent) {
+                menuHome.parent.insertBefore(menu, menuHome.next);
+            }
+            menu.style.position = '';
+            menu.style.top = '';
+            menu.style.left = '';
+            menu.style.width = '';
+            menu.style.zIndex = '';
+            menu.style.visibility = '';
+        }
+
+        function positionMenu() {
+            const rect = trigger.getBoundingClientRect();
+            menu.style.left = rect.left + 'px';
+            menu.style.width = rect.width + 'px';
+            menu.hidden = false;
+            menu.style.visibility = 'hidden';
+            menu.style.top = '-9999px';
+            const menuH = menu.offsetHeight;
+            const gap = 4;
+            const spaceBelow = window.innerHeight - rect.bottom - gap;
+            const spaceAbove = rect.top - gap;
+            if (menuH <= spaceBelow || spaceBelow >= spaceAbove) {
+                menu.style.top = (rect.bottom + gap) + 'px';
+            } else {
+                menu.style.top = Math.max(8, rect.top - menuH - gap) + 'px';
+            }
+            menu.style.visibility = '';
+        }
+
+        function openMenu() {
+            if (!menuHome) {
+                menuHome = { parent: menu.parentElement, next: menu.nextSibling };
+            }
+            document.body.appendChild(menu);
+            menu.style.position = 'fixed';
+            menu.style.zIndex = '1300';
+            positionMenu();
+            picker.classList.add('is-open');
+            trigger.setAttribute('aria-expanded', 'true');
+        }
+
+        resetSkillPicker = function () {
+            checks.forEach(function (c) { c.checked = false; });
+            updateDisplay();
+        };
+
+        checks.forEach(function (cb) {
+            cb.addEventListener('change', updateDisplay);
+        });
+
+        trigger.addEventListener('click', function (e) {
+            e.stopPropagation();
+            if (picker.classList.contains('is-open')) closeMenu();
+            else openMenu();
+        });
+
+        menu.addEventListener('click', function (e) {
+            e.stopPropagation();
+        });
+
+        document.addEventListener('click', closeMenu);
+        window.addEventListener('resize', function () {
+            if (picker.classList.contains('is-open')) positionMenu();
+        });
+
+        updateDisplay();
+    })();
+
+    const candidatesUrl = {% if team %}"{% url 'recommend_team_members' team.pk %}"{% else %}"{% url 'recommend_team_members_new' %}"{% endif %};
+    let selectedWorkers = new Set();
+    let reloadTimer = null;
+
+    function getSelectedTargetTypes() {
+        return Array.from(document.querySelectorAll('#teamTargetTypes input[type="checkbox"]:checked'))
+            .map(function (el) { return el.value; });
+    }
+
+    function getRosterMemberIds() {
+        return Array.from(selectedWorkers);
+    }
+
+    function escapeHtml(s) {
+        const d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+    }
+
+    function renderMemberCard(w) {
+        const checked = selectedWorkers.has(w.id) ? 'checked' : '';
+        const label = w.label || w.name || '';
+        const scoreHtml = w.score != null
+            ? '<span class="mg-member-pick__score">' + w.score + '%</span>'
+            : '';
+        const reasons = (w.reasons || []).slice(0, 3).join(' · ');
+        const reasonsHtml = reasons
+            ? '<span class="mg-member-pick__reasons">' + escapeHtml(reasons) + '</span>'
+            : '';
+        let breakdownHtml = '';
+        if (w.breakdown) {
+            const b = w.breakdown;
+            breakdownHtml = '<span class="mg-member-pick__breakdown">' +
+                'Навыки ' + (b.skills != null ? b.skills : '—') +
+                ' · Синергия ' + (b.synergy != null ? b.synergy : '—') +
+                ' · Опыт ' + (b.experience != null ? b.experience : '—') +
+                '</span>';
+        }
+        const velocityHtml = w.velocity != null
+            ? '<span class="mg-member-pick__velocity">Скорость ' + w.velocity + '/10</span>'
+            : '';
+        const badge = w.recommended
+            ? '<span class="mg-member-pick__badge">Рекомендуем</span>'
+            : '';
+        return (
+            '<label class="mg-member-pick' + (w.recommended ? ' mg-member-pick--recommended' : '') + '">' +
+            '<input type="checkbox" name="members" value="' + w.id + '" class="mg-member-pick__input worker-checkbox" ' + checked + '>' +
+            '<span class="mg-member-pick__check" aria-hidden="true"></span>' +
+            '<span class="mg-member-pick__body">' +
+            '<span class="mg-member-pick__name">' + escapeHtml(label) + badge + '</span>' +
+            '<span class="mg-member-pick__meta">Рейтинг ' + (w.rating != null ? w.rating : '—') +
+            (w.specialization ? ' · ' + escapeHtml(w.specialization) : '') +
+            (w.teams_label ? ' · ' + escapeHtml(w.teams_label) : '') + '</span>' +
+            reasonsHtml + breakdownHtml + velocityHtml +
+            '</span>' +
+            scoreHtml +
+            '</label>'
+        );
+    }
+
+    function bindCheckboxes(root) {
+        if (!root) return;
+        root.querySelectorAll('.worker-checkbox').forEach(function (cb) {
+            cb.addEventListener('change', function () {
+                const id = parseInt(this.value, 10);
+                if (this.checked) selectedWorkers.add(id);
+                else selectedWorkers.delete(id);
+                scheduleLoadWorkers();
+            });
+        });
+    }
+
+    function updateRosterScore(data) {
+        const bar = document.getElementById('rosterScoreBar');
+        const val = document.getElementById('rosterScoreValue');
+        const hint = document.getElementById('rosterScoreHint');
+        if (!bar || !val) return;
+        const score = data.roster_score;
+        const count = getRosterMemberIds().length;
+        if (count < 1 || score == null) {
+            bar.hidden = true;
+            return;
+        }
+        bar.hidden = false;
+        val.textContent = score + '%';
+        val.className = 'mg-roster-score__value' + (
+            score >= 70 ? ' mg-roster-score__value--high' :
+            score >= 50 ? '' : ' mg-roster-score__value--low'
+        );
+        if (hint) {
+            hint.textContent = count === 1
+                ? 'Добавьте ещё участников для оценки синергии'
+                : (count + ' в составе');
+        }
+    }
+
+    function scheduleLoadWorkers() {
+        window.clearTimeout(reloadTimer);
+        reloadTimer = window.setTimeout(loadWorkers, 320);
+    }
+
+    function showEmpty(message) {
+        const loading = document.getElementById('workersLoading');
+        const recSec = document.getElementById('recommendedSection');
+        const allSec = document.getElementById('allSection');
+        if (loading) loading.hidden = true;
+        if (recSec) recSec.hidden = true;
+        if (allSec) {
+            allSec.hidden = false;
+            document.getElementById('allSectionTitle').textContent = 'Кандидаты';
+            document.getElementById('allGrid').innerHTML =
+                '<div class="mg-members-grid__empty">' + escapeHtml(message) + '</div>';
+        }
+    }
+
+    function loadWorkers() {
+        const loading = document.getElementById('workersLoading');
+        const recSec = document.getElementById('recommendedSection');
+        const allSec = document.getElementById('allSection');
+        const recGrid = document.getElementById('recommendedGrid');
+        const allGrid = document.getElementById('allGrid');
+        if (loading) loading.hidden = false;
+        if (recSec) recSec.hidden = true;
+        if (allSec) allSec.hidden = true;
+
+        const params = new URLSearchParams();
+        getSelectedSkillIds().forEach(function (id) {
+            params.append('skill_id', id);
+        });
+        getSelectedTargetTypes().forEach(function (t) {
+            params.append('type', t);
+        });
+        getRosterMemberIds().forEach(function (id) {
+            params.append('selected', String(id));
+        });
+
+        const qs = params.toString();
+        fetch(candidatesUrl + (qs ? '?' + qs : ''))
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (loading) loading.hidden = true;
+                updateRosterScore(data);
+                const workers = data.workers || [];
+                if (!workers.length) {
+                    showEmpty('Нет сотрудников по этому фильтру');
+                    return;
+                }
+
+                const recommended = workers.filter(function (w) { return w.recommended; });
+                const others = workers.filter(function (w) { return !w.recommended; });
+
+                if (recommended.length) {
+                    recSec.hidden = false;
+                    recGrid.innerHTML = recommended.map(renderMemberCard).join('');
+                    bindCheckboxes(recGrid);
+                } else {
+                    recSec.hidden = true;
+                }
+
+                if (others.length) {
+                    allSec.hidden = false;
+                    document.getElementById('allSectionTitle').textContent =
+                        recommended.length ? 'Остальные кандидаты' : 'Кандидаты';
+                    allGrid.innerHTML = others.map(renderMemberCard).join('');
+                    bindCheckboxes(allGrid);
+                } else if (!recommended.length) {
+                    showEmpty('Нет сотрудников');
+                } else {
+                    allSec.hidden = true;
+                }
+            })
+            .catch(function () {
+                showEmpty('Не удалось загрузить сотрудников');
+            });
+    }
+
+    document.getElementById('applyFilter').addEventListener('click', loadWorkers);
+    document.getElementById('resetFilter').addEventListener('click', function () {
+        if (resetSkillPicker) resetSkillPicker();
+        loadWorkers();
+    });
+
+    document.querySelectorAll('#teamTargetTypes input[type="checkbox"]').forEach(function (el) {
+        el.addEventListener('change', scheduleLoadWorkers);
+    });
+
+    const initialSelected = [{% for mid in initial_member_ids %}{{ mid }},{% endfor %}];
+    initialSelected.forEach(function (id) { if (id) selectedWorkers.add(id); });
+    loadWorkers();
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,106 @@
+{% if form.non_field_errors %}
+<ul class="mg-form-errors">
+    {% for error in form.non_field_errors %}
+    <li>{{ error }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+<div class="mg-form-section">
+    <div class="mg-form-section__label">Детали</div>
+    <div class="mg-field">
+        <label for="{{ form.title.id_for_label }}">Название</label>
+        {{ form.title }}
+        {% if form.title.errors %}<ul class="mg-field__errors">{% for e in form.title.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+    </div>
+    <div class="mg-field">
+        <label for="{{ form.description.id_for_label }}">Описание</label>
+        {{ form.description }}
+        {% if form.description.errors %}<ul class="mg-field__errors">{% for e in form.description.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+    </div>
+    <div class="mg-field">
+        <label for="{{ form.link.id_for_label }}">
+            <i class="fa-solid fa-link mg-field__label-icon" aria-hidden="true"></i>
+            {{ form.link.label }}
+        </label>
+        {{ form.link }}
+        <p class="mg-field__hint">Репозиторий GitHub, документация, Figma и т.д.</p>
+        {% if form.link.errors %}<ul class="mg-field__errors">{% for e in form.link.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+    </div>
+</div>
+
+<div class="mg-form-section mg-form-section--types">
+    <div class="mg-form-section__label">Типы и ранг</div>
+    <div class="mg-field mg-field--types">
+        <label for="{{ form.types.id_for_label }}">Типы задач</label>
+        <div class="mg-type-options" id="{{ form.types.id_for_label }}">
+            {% for value, label in form.fields.types.choices %}
+            <label class="mg-type-option">
+                <input
+                    type="checkbox"
+                    name="types"
+                    value="{{ value }}"
+                    {% if form.types.value %}
+                        {% if value in form.types.value %}checked{% endif %}
+                    {% elif form.instance.pk and value in form.instance.types %}checked{% endif %}
+                >
+                <span>{{ label }}</span>
+            </label>
+            {% endfor %}
+        </div>
+        {% if form.types.errors %}<ul class="mg-field__errors">{% for e in form.types.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+        <p class="mg-field__hint">Выберите один или несколько — например, Front + Back для full-stack.</p>
+    </div>
+    <div class="mg-field mg-field--rank">
+        <label for="{{ form.rank.id_for_label }}">Ранг</label>
+        {{ form.rank }}
+    </div>
+</div>
+
+<div class="mg-form-section">
+    <div class="mg-form-section__label">Срок</div>
+    <div class="mg-field">
+        <label for="{{ form.due_date.id_for_label }}">Дата и время</label>
+        <div class="mg-deadline-field">
+            {{ form.due_date }}
+            <i class="fa-regular fa-calendar-days mg-deadline-field__icon" aria-hidden="true"></i>
+        </div>
+        <p class="mg-field__hint">Выберите день в календаре, затем прокрутите для установки времени.</p>
+        {% if form.due_date.errors %}<ul class="mg-field__errors">{% for e in form.due_date.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+    </div>
+</div>
+
+<div class="mg-form-section">
+    <div class="mg-form-section__label">Назначение</div>
+
+    <input type="hidden" name="assigned_to" id="id_assigned_to"
+        value="{% if prefill_worker %}{{ prefill_worker.pk }}{% else %}{{ form.assigned_to.value|default:'' }}{% endif %}"
+        {% if prefill_worker %}data-prefill-label="{{ prefill_worker.full_name|default:prefill_worker.username }}"{% endif %}>
+    <input type="hidden" name="team" id="id_team"
+        value="{% if prefill_team %}{{ prefill_team.pk }}{% else %}{{ form.team.value|default:'' }}{% endif %}"
+        {% if prefill_team %}data-prefill-label="{{ prefill_team.name }}"{% endif %}>
+
+    <div class="mg-assign-picker" id="mg-picker-worker" data-kind="worker" data-input="id_assigned_to" data-clear-team="id_team">
+        <label class="mg-assign-picker__label">Назначить сотруднику</label>
+        <input type="search" class="mg-input mg-assign-picker__search" placeholder="Поиск сотрудника…" autocomplete="off">
+        <div class="mg-assign-picker__tabs">
+            <button type="button" class="mg-assign-picker__tab mg-assign-picker__tab--active" data-tab="recommended">Рекомендуемые</button>
+            <button type="button" class="mg-assign-picker__tab" data-tab="all">Все</button>
+        </div>
+        <div class="mg-assign-picker__list" role="listbox" aria-label="Сотрудники"></div>
+        <p class="mg-assign-picker__selected" hidden></p>
+    </div>
+
+    <div class="mg-assign-picker" id="mg-picker-team" data-kind="team" data-input="id_team" data-clear-worker="id_assigned_to">
+        <label class="mg-assign-picker__label">Назначить команде</label>
+        <input type="search" class="mg-input mg-assign-picker__search" placeholder="Поиск команды…" autocomplete="off">
+        <div class="mg-assign-picker__tabs">
+            <button type="button" class="mg-assign-picker__tab mg-assign-picker__tab--active" data-tab="recommended">Рекомендуемые</button>
+            <button type="button" class="mg-assign-picker__tab" data-tab="all">Все</button>
+        </div>
+        <div class="mg-assign-picker__list" role="listbox" aria-label="Команды"></div>
+        <p class="mg-assign-picker__selected" hidden></p>
+    </div>
+
+    <p class="mg-field__hint">Выберите сотрудника или команду. Рекомендации обновляются при изменении типов задач.</p>
+</div>
