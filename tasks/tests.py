@@ -1,13 +1,13 @@
 from datetime import timedelta
 
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
 from accounts.models import User
 from tasks.models import Task, Team
 from tasks.querysets import tasks_q_for_worker
-from tasks.services.task_completion import apply_task_outcome
+from tasks.services.task_completion import apply_task_outcome, submit_task_for_review
 
 
 class TaskCompletionTests(TestCase):
@@ -36,16 +36,22 @@ class TaskCompletionTests(TestCase):
 
     def test_solo_task_success_updates_rating(self):
         task = self._task(assigned_to=self.worker, rank=50)
-        apply_task_outcome(task, success=True, completed_by=self.worker)
+        task.status = 'in_progress'
+        task.save(update_fields=['status'])
+        submit_task_for_review(task, self.worker)
+        apply_task_outcome(task, success=True, completed_by=self.manager)
         self.worker.refresh_from_db()
         task.refresh_from_db()
         self.assertEqual(self.worker.rating, 150)
         self.assertEqual(task.status, 'completed')
-        self.assertEqual(task.completed_by, self.worker)
+        self.assertEqual(task.completed_by, self.manager)
 
     def test_team_task_splits_rating(self):
         task = self._task(team=self.team, rank=101)
-        apply_task_outcome(task, success=True, completed_by=self.worker)
+        task.status = 'in_progress'
+        task.save(update_fields=['status'])
+        submit_task_for_review(task, self.worker)
+        apply_task_outcome(task, success=True, completed_by=self.manager)
         self.worker.refresh_from_db()
         self.worker2.refresh_from_db()
         self.assertEqual(self.worker.rating, 151)
@@ -53,8 +59,11 @@ class TaskCompletionTests(TestCase):
 
     def test_rating_does_not_go_below_zero(self):
         task = self._task(assigned_to=self.worker, rank=500)
+        task.status = 'in_progress'
+        task.save(update_fields=['status'])
         self.worker.rating = 10
         self.worker.save(update_fields=['rating'])
+        submit_task_for_review(task, self.worker)
         apply_task_outcome(task, success=False, completed_by=self.manager)
         self.worker.refresh_from_db()
         self.assertEqual(self.worker.rating, 0)
@@ -62,6 +71,17 @@ class TaskCompletionTests(TestCase):
     def test_already_completed_returns_none(self):
         task = self._task(assigned_to=self.worker, status='completed')
         self.assertIsNone(apply_task_outcome(task, success=True))
+
+    def test_submit_does_not_change_rating(self):
+        task = self._task(assigned_to=self.worker, rank=50)
+        task.status = 'in_progress'
+        task.save(update_fields=['status'])
+        submit_task_for_review(task, self.worker)
+        self.worker.refresh_from_db()
+        task.refresh_from_db()
+        self.assertEqual(self.worker.rating, 100)
+        self.assertEqual(task.status, 'pending_review')
+        self.assertEqual(task.submitted_by, self.worker)
 
 
 class WorkerTaskFilterTests(TestCase):
@@ -131,6 +151,31 @@ class TaskViewTests(TestCase):
         self.task.refresh_from_db()
         self.assertEqual(self.task.status, 'in_progress')
 
+    def test_worker_submit_then_manager_approves_rating(self):
+        self.client.login(username='wrk', password='pass')
+        self.client.post(reverse('start_task', args=[self.task.pk]))
+        self.client.post(reverse('complete_task', args=[self.task.pk]))
+        self.task.refresh_from_db()
+        self.assertEqual(self.task.status, 'pending_review')
+        self.worker.refresh_from_db()
+        self.assertEqual(self.worker.rating, 0)
+
+        self.client.login(username='mgr', password='pass')
+        self.client.post(reverse('review_task', args=[self.task.pk]), {'action': 'approve'})
+        self.task.refresh_from_db()
+        self.worker.refresh_from_db()
+        self.assertEqual(self.task.status, 'completed')
+        self.assertEqual(self.worker.rating, 10)
+
+    def test_start_task_no_flash_banner_on_dashboard(self):
+        self.client.login(username='wrk', password='pass')
+        self.client.post(reverse('start_task', args=[self.task.pk]))
+        home = self.client.get(reverse('dashboard'))
+        self.assertNotContains(home, 'wa-messages')
+        self.assertNotContains(home, 'Задача «Solo» в работе')
+        self.task.refresh_from_db()
+        self.assertEqual(self.task.status, 'in_progress')
+
     def test_delete_task_requires_post(self):
         self.client.login(username='mgr', password='pass')
         response = self.client.get(reverse('delete_task', args=[self.task.pk]))
@@ -146,7 +191,8 @@ class RegistrationTests(TestCase):
         self.assertContains(response, 'auth-card')
         self.assertNotContains(response, 'form.as_p')
 
-    def test_register_creates_worker_only(self):
+    @override_settings(MANAGER_REGISTRATION_CODE='')
+    def test_register_creates_worker_by_default(self):
         response = Client().post(reverse('register'), {
             'username': 'newuser',
             'email': 'new@test.com',
@@ -156,6 +202,30 @@ class RegistrationTests(TestCase):
         self.assertEqual(response.status_code, 302)
         user = User.objects.get(username='newuser')
         self.assertEqual(user.role, 'worker')
+
+    @override_settings(MANAGER_REGISTRATION_CODE='invite-mgr-42')
+    def test_register_manager_requires_valid_code(self):
+        bad = Client().post(reverse('register'), {
+            'username': 'badmgr',
+            'email': 'bad@test.com',
+            'password1': 'complexpass123',
+            'password2': 'complexpass123',
+            'role': 'manager',
+            'manager_invite_code': 'wrong',
+        })
+        self.assertEqual(bad.status_code, 200)
+        self.assertFalse(User.objects.filter(username='badmgr').exists())
+
+        ok = Client().post(reverse('register'), {
+            'username': 'goodmgr',
+            'email': 'mgr@test.com',
+            'password1': 'complexpass123',
+            'password2': 'complexpass123',
+            'role': 'manager',
+            'manager_invite_code': 'invite-mgr-42',
+        })
+        self.assertEqual(ok.status_code, 302)
+        self.assertEqual(User.objects.get(username='goodmgr').role, 'manager')
 
 
 class ProfileAccessTests(TestCase):
@@ -236,6 +306,21 @@ class WorkerHomeTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Фокус на сегодня')
         self.assertContains(response, 'Today task')
+
+    def test_today_focus_shows_new_task_with_future_deadline(self):
+        due = timezone.now() + timedelta(days=2)
+        Task.objects.create(
+            title='New future task',
+            description='d',
+            assigned_to=self.worker,
+            types=['Front'],
+            rank=40,
+            due_date=due,
+            created_by=self.manager,
+        )
+        self.client.login(username='wrk', password='pass')
+        response = self.client.get(reverse('dashboard'))
+        self.assertContains(response, 'New future task')
 
     def test_worker_tasks_list_route(self):
         self.client.login(username='wrk', password='pass')

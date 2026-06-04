@@ -1,6 +1,5 @@
 import json
 
-from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Avg, Count, Q, Sum
 from django.shortcuts import get_object_or_404, redirect, render
@@ -22,7 +21,6 @@ from .helpers import can_view_worker_profile, member_badge, worker_tasks_q
 def worker_profile(request, username):
     worker = get_object_or_404(User, username=username, role='worker')
     if not can_view_worker_profile(request.user, worker):
-        messages.error(request, 'Нет прав')
         return redirect('dashboard')
 
     tasks = Task.objects.filter(tasks_q_for_worker_profile(worker))

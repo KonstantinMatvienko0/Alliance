@@ -12,13 +12,6 @@
     {% block extra_head %}{% endblock %}
 </head>
 <body class="auth-page">
-    {% if messages %}
-    <div class="auth-messages">
-        {% for message in messages %}
-        <div class="auth-message auth-message--{{ message.tags }}">{{ message }}</div>
-        {% endfor %}
-    </div>
-    {% endif %}
     {% block content %}{% endblock %}
 </body>
 </html>

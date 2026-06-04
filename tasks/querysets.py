@@ -1,4 +1,4 @@
-from django.db.models import Q
+from django.db.models import Case, IntegerField, Q, Value, When
 
 
 def tasks_q_for_worker(user):
@@ -13,6 +13,31 @@ def tasks_q_for_worker(user):
 def tasks_q_for_worker_profile(worker):
     """Задачи для отображения в профиле работника."""
     return tasks_q_for_worker(worker)
+
+
+def worker_today_focus_tasks(active_qs, *, now, start_of_day, end_of_day, limit=8):
+    """
+    Задачи для блока «Фокус на сегодня»:
+    просроченные и с дедлайном сегодня, плюс новые назначения (созданы сегодня).
+    """
+    return (
+        active_qs.filter(
+            Q(due_date__lt=end_of_day) | Q(created_at__gte=start_of_day),
+        )
+        .annotate(
+            focus_priority=Case(
+                When(due_date__lt=now, then=0),
+                When(
+                    due_date__gte=start_of_day,
+                    due_date__lt=end_of_day,
+                    then=1,
+                ),
+                default=2,
+                output_field=IntegerField(),
+            ),
+        )
+        .order_by('focus_priority', 'due_date', '-created_at')[:limit]
+    )
 
 
 def worker_can_access_task(user, task):

@@ -10,7 +10,7 @@ from accounts.models import User
 from accounts.services.work_timer import get_workers_work_summary
 
 from ..models import Task, Team
-from ..querysets import tasks_q_for_worker
+from ..querysets import tasks_q_for_worker, worker_today_focus_tasks
 from ..services.rating import rating_change_for_user
 from ..task_detail import tasks_detail_map_from_page
 from ..type_utils import _type_match_q, aggregate_task_types, filter_tasks_by_types, parse_type_filters
@@ -40,6 +40,7 @@ def manager_dashboard(request):
     status_counts = dict(
         Task.objects.values('status').annotate(c=Count('id')).values_list('status', 'c')
     )
+    pending_review_count = status_counts.get('pending_review', 0)
     now = timezone.localtime()
     display_name = request.user.full_name or request.user.username
 
@@ -56,6 +57,7 @@ def manager_dashboard(request):
         'teams_count': Team.objects.count(),
         'total_rank': total_rank,
         'workers_work': get_workers_work_summary(),
+        'pending_review_count': pending_review_count,
     })
 
 
@@ -72,11 +74,14 @@ def worker_home(request):
 
     base_q = tasks_q_for_worker(user)
     all_tasks = Task.objects.filter(base_q).select_related('team')
-    active = all_tasks.filter(status__in=['open', 'in_progress'])
+    active = all_tasks.filter(status__in=['open', 'in_progress', 'pending_review'])
 
-    today_focus = active.filter(
-        Q(due_date__lt=end_of_day),
-    ).order_by('due_date')[:8]
+    today_focus = worker_today_focus_tasks(
+        active,
+        now=now,
+        start_of_day=start_of_day,
+        end_of_day=end_of_day,
+    )
 
     in_progress_tasks = active.filter(status='in_progress').order_by('due_date')[:5]
     open_tasks = active.filter(status='open').order_by('due_date')[:5]
@@ -101,6 +106,7 @@ def worker_home(request):
         'team': user.teams.first(),
         'open_count': active.filter(status='open').count(),
         'in_progress_count': active.filter(status='in_progress').count(),
+        'pending_review_count': active.filter(status='pending_review').count(),
         'overdue_count': overdue_count,
         'due_today_count': due_today_count,
         'completed_week': all_tasks.filter(

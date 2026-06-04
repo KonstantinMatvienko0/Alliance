@@ -4,10 +4,39 @@
     if (!modal || !dataEl) return;
 
     let tasksMap = {};
+    let pageCtx = {};
     try {
         tasksMap = JSON.parse(dataEl.textContent);
     } catch (e) {
         return;
+    }
+    const ctxEl = document.getElementById('wa-tasks-detail-ctx');
+    if (ctxEl) {
+        try {
+            pageCtx = JSON.parse(ctxEl.textContent);
+        } catch (e) {
+            pageCtx = {};
+        }
+    }
+
+    const managerPageView = pageCtx.manager_view === true;
+
+    function isManagerViewer(task) {
+        return managerPageView || task.is_manager === true || !!task.delete_url;
+    }
+
+    function reviewActionUrl(task) {
+        if (task.review_approve_url) {
+            return task.review_approve_url;
+        }
+        if (task.id) {
+            return '/task/' + task.id + '/review/';
+        }
+        return '';
+    }
+
+    function taskNeedsReviewActions(task) {
+        return task.status === 'pending_review' && (task.can_review || isManagerViewer(task));
     }
 
     const els = {
@@ -25,6 +54,7 @@
         link: document.getElementById('wa-task-detail-link'),
         linkText: document.getElementById('wa-task-detail-link-text'),
         foot: document.getElementById('wa-task-detail-foot'),
+        reviewBanner: document.getElementById('wa-task-detail-review-banner'),
     };
 
     function rememberHome(el) {
@@ -158,6 +188,8 @@
             kvRow('Команда', task.team),
             kvRow('Исполнитель', task.assigned_to),
             kvRow('Закрыл', task.completed_by),
+            kvRow('Отправил на проверку', task.submitted_by),
+            kvRow('Дата отправки', task.submitted_at),
         ];
         rows.forEach(function (row) {
             if (row) els.meta.appendChild(row);
@@ -200,27 +232,56 @@
             hasActions = true;
         }
 
-        if (task.manager_complete_url && task.status !== 'completed' && task.status !== 'failed') {
-            els.foot.appendChild(postForm(
-                task.manager_complete_url,
-                { csrf: task.csrf, success: 'true' },
-                'tdm-foot__btn--primary',
-                'Завершить'
-            ));
-            els.foot.appendChild(postForm(
-                task.manager_complete_url,
-                { csrf: task.csrf, success: 'false' },
-                'tdm-foot__btn--danger',
-                'Провал'
-            ));
-            hasActions = true;
+        if (taskNeedsReviewActions(task)) {
+            const reviewUrl = reviewActionUrl(task);
+            if (reviewUrl) {
+                const approve = postForm(
+                    reviewUrl,
+                    { csrf: task.csrf, action: 'approve' },
+                    'tdm-foot__btn--primary',
+                    'Принять работу'
+                );
+                const fail = postForm(
+                    reviewUrl,
+                    { csrf: task.csrf, action: 'reject' },
+                    'tdm-foot__btn--danger',
+                    'Провал'
+                );
+                fail.addEventListener('submit', function (e) {
+                    if (!window.confirm('Не принять выполнение? Рейтинг исполнителя будет снижен.')) {
+                        e.preventDefault();
+                    }
+                });
+                els.foot.classList.add('tdm-foot--review');
+                els.foot.appendChild(approve);
+                els.foot.appendChild(fail);
+                hasActions = true;
+            }
+        } else {
+            els.foot.classList.remove('tdm-foot--review');
         }
 
-        if (task.delete_url) {
+        if (task.delete_url && task.status !== 'pending_review') {
             const delForm = postForm(
                 task.delete_url,
                 { csrf: task.csrf },
                 'tdm-foot__btn--danger',
+                'Удалить'
+            );
+            delForm.addEventListener('submit', function (e) {
+                if (!window.confirm('Удалить эту задачу?')) {
+                    e.preventDefault();
+                }
+            });
+            els.foot.appendChild(delForm);
+            hasActions = true;
+        }
+
+        if (task.delete_url && task.status === 'pending_review') {
+            const delForm = postForm(
+                task.delete_url,
+                { csrf: task.csrf },
+                'tdm-foot__btn--ghost tdm-foot__btn--danger-text',
                 'Удалить'
             );
             delForm.addEventListener('submit', function (e) {
@@ -252,18 +313,19 @@
                 'Начать задачу'
             ));
         }
-        if ((task.status === 'open' || task.status === 'in_progress') && task.complete_url) {
+        if (task.status === 'in_progress' && task.complete_url) {
             els.foot.appendChild(postForm(
                 task.complete_url,
                 { csrf: task.csrf },
                 'tdm-foot__btn--ghost',
-                'Завершить'
+                'Отправить на проверку'
             ));
         }
     }
 
     function renderFooter(task) {
-        if (task.manager_complete_url || task.edit_url || task.delete_url) {
+        els.foot.classList.remove('tdm-foot--review');
+        if (isManagerViewer(task)) {
             renderManagerFooter(task);
         } else {
             renderWorkerFooter(task);
@@ -289,6 +351,11 @@
             els.linkText.textContent = task.link;
         } else {
             els.linkWrap.hidden = true;
+        }
+
+        if (els.reviewBanner) {
+            const showReview = taskNeedsReviewActions(task);
+            els.reviewBanner.hidden = !showReview;
         }
 
         renderFooter(task);

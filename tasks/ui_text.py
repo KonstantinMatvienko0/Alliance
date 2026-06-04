@@ -9,6 +9,7 @@ PRIORITY_LABELS = {
 STATUS_UI_LABELS = {
     'open': 'К выполнению',
     'in_progress': 'В работе',
+    'pending_review': 'На проверке',
     'completed': 'Выполнена',
     'failed': 'Отменена',
 }
@@ -16,6 +17,7 @@ STATUS_UI_LABELS = {
 STATUS_CHOICES_RU = [
     ('open', 'Открыта'),
     ('in_progress', 'В работе'),
+    ('pending_review', 'На проверке'),
     ('completed', 'Выполнена'),
     ('failed', 'Провалена'),
 ]

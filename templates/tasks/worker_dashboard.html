@@ -115,7 +115,7 @@
                                 {% if task.status == 'open' or task.status == 'in_progress' %}
                                 <form action="{% url 'complete_task' task.id %}" method="post">
                                     {% csrf_token %}
-                                    <button type="submit" class="wa-actions__item">Завершить</button>
+                                    <button type="submit" class="wa-actions__item">На проверку</button>
                                 </form>
                                 {% endif %}
                                 <a href="{% url 'worker_profile' user.username %}" class="wa-actions__item">Мой профиль</a>

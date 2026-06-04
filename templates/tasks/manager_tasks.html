@@ -163,6 +163,7 @@
 </div>
 
 {{ tasks_detail_map|json_script:"wa-tasks-detail-data" }}
+{{ page_ctx|json_script:"wa-tasks-detail-ctx" }}
 {% include 'includes/wa_task_detail_modal.html' %}
 {% endblock %}
 
@@ -199,5 +200,5 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="{% static 'js/task-deadline-picker.js' %}"></script>
 <script src="{% static 'js/mg-assign-picker.js' %}"></script>
-<script src="{% static 'js/task-detail-modal.js' %}"></script>
+<script src="{% static 'js/task-detail-modal.js' %}?v=review-actions"></script>
 {% endblock %}

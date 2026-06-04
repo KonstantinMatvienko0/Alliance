@@ -1,4 +1,3 @@
-from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Avg, Count, Q
 from django.http import JsonResponse
@@ -44,7 +43,6 @@ def worker_team_detail(request, pk):
 
     team = get_object_or_404(Team, pk=pk)
     if not user.teams.filter(pk=team.pk).exists():
-        messages.error(request, 'Нет доступа к этой команде')
         return redirect('worker_team')
 
     query = request.GET.get('q', '').strip()
@@ -148,13 +146,11 @@ def team_save_notes(request, pk):
     if len(notes) > 5000:
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({'ok': False, 'error': 'Слишком длинная заметка'}, status=400)
-        messages.error(request, 'Заметка слишком длинная (макс. 5000 символов).')
         return redirect('team_detail', pk=pk)
     team.manager_notes = notes.strip()
     team.save(update_fields=['manager_notes'])
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return JsonResponse({'ok': True})
-    messages.success(request, 'Заметка сохранена.')
     return redirect('team_detail', pk=pk)
 
 

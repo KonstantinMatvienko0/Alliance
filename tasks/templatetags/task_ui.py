@@ -6,6 +6,7 @@ register = template.Library()
 STATUS_ICONS = {
     'open': 'fa-regular fa-circle',
     'in_progress': 'fa-regular fa-clock',
+    'pending_review': 'fa-regular fa-hourglass-half',
     'completed': 'fa-regular fa-circle-check',
     'failed': 'fa-regular fa-circle-xmark',
 }

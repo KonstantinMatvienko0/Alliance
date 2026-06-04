@@ -842,6 +842,7 @@
 
 .mg-status-list__dot--open { background: #71717a; }
 .mg-status-list__dot--progress { background: #fbbf24; }
+.mg-status-list__dot--review { background: #60a5fa; }
 .mg-status-list__dot--done { background: var(--wa-accent); }
 .mg-status-list__dot--fail { background: #f87171; }
 

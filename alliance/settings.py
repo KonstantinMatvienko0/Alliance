@@ -3,6 +3,24 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+
+def _load_dotenv():
+    """Читает .env из корня репозитория или папки alliance (без сторонних пакетов)."""
+    for path in (BASE_DIR.parent / '.env', BASE_DIR / '.env'):
+        if not path.is_file():
+            continue
+        for line in path.read_text(encoding='utf-8').splitlines():
+            line = line.strip()
+            if not line or line.startswith('#') or '=' not in line:
+                continue
+            key, _, value = line.partition('=')
+            key = key.strip()
+            value = value.strip().strip('"').strip("'")
+            os.environ.setdefault(key, value)
+
+
+_load_dotenv()
+
 SECRET_KEY = os.environ.get(
     'DJANGO_SECRET_KEY',
     'django-insecure-dev-key-change-in-production',
@@ -15,6 +33,11 @@ ALLOWED_HOSTS = [
     for host in os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
     if host.strip()
 ]
+
+# Код для регистрации менеджера (пусто — только работники)
+MANAGER_REGISTRATION_CODE = os.environ.get('MANAGER_REGISTRATION_CODE', '').strip()
+if DEBUG and not MANAGER_REGISTRATION_CODE:
+    MANAGER_REGISTRATION_CODE = 'alliance-mgr-dev'
 
 INSTALLED_APPS = [
     'django.contrib.admin',

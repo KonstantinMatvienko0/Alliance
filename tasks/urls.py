@@ -7,6 +7,7 @@ from .views.tasks import (
     delete_task,
     manager_complete_task,
     manager_tasks,
+    review_task,
     start_task,
 )
 from .views.teams import (
@@ -31,6 +32,7 @@ urlpatterns = [
     path('manager/workers/', manager_workers, name='manager_workers'),
     path('task/<int:pk>/start/', start_task, name='start_task'),
     path('task/<int:pk>/complete/', complete_task, name='complete_task'),
+    path('task/<int:pk>/review/', review_task, name='review_task'),
     path('task/<int:pk>/manager-complete/', manager_complete_task, name='manager_complete_task'),
     path('task/<int:pk>/delete/', delete_task, name='delete_task'),
     path('profile/<str:username>/', worker_profile, name='worker_profile'),

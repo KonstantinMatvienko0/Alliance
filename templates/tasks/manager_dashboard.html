@@ -29,7 +29,7 @@
         <a href="{% url 'manager_tasks' %}" class="mg-stat-card mg-stat-card--link">
             <span class="mg-stat-card__label">Задачи</span>
             <span class="mg-stat-card__value">{{ total_tasks }}</span>
-            <span class="mg-stat-card__meta">{{ tasks_open }} открыто · {{ tasks_in_progress }} в работе</span>
+            <span class="mg-stat-card__meta">{{ tasks_open }} открыто · {{ tasks_in_progress }} в работе{% if pending_review_count %} · {{ pending_review_count }} на проверке{% endif %}</span>
         </a>
         <a href="{% url 'manager_workers' %}" class="mg-stat-card mg-stat-card--link">
             <span class="mg-stat-card__label">Сотрудники</span>
@@ -47,6 +47,7 @@
             <ul class="mg-status-list">
                 <li><span class="mg-status-list__dot mg-status-list__dot--open"></span> Открыто <strong>{{ tasks_open }}</strong></li>
                 <li><span class="mg-status-list__dot mg-status-list__dot--progress"></span> В работе <strong>{{ tasks_in_progress }}</strong></li>
+                <li><span class="mg-status-list__dot mg-status-list__dot--review"></span> На проверке <strong>{{ pending_review_count }}</strong></li>
                 <li><span class="mg-status-list__dot mg-status-list__dot--done"></span> Завершено <strong>{{ tasks_completed }}</strong></li>
                 <li><span class="mg-status-list__dot mg-status-list__dot--fail"></span> Провал <strong>{{ tasks_failed }}</strong></li>
             </ul>

@@ -12,7 +12,7 @@ from tasks.services.team_composition import (
     score_roster_composition,
     score_worker_for_team_composition,
 )
-from tasks.services.task_completion import apply_task_outcome
+from tasks.services.task_completion import apply_task_outcome, submit_task_for_review
 
 
 class TeamCompositionTests(TestCase):
@@ -65,6 +65,9 @@ class TeamCompositionTests(TestCase):
             team=team,
             created_by=self.manager,
         )
+        task.status = 'in_progress'
+        task.save(update_fields=['status'])
+        submit_task_for_review(task, self.a)
         apply_task_outcome(task, success=True, completed_by=self.manager)
         refresh_worker_metrics(self.a)
         refresh_worker_metrics(self.b)

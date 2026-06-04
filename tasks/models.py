@@ -24,6 +24,7 @@ class Task(models.Model):
     STATUS_CHOICES = [
         ('open', 'Открыта'),
         ('in_progress', 'В работе'),
+        ('pending_review', 'На проверке'),
         ('completed', 'Выполнена'),
         ('failed', 'Провалена'),
     ]
@@ -61,9 +62,20 @@ class Task(models.Model):
         related_name='completed_tasks',
     )
     completed_at = models.DateTimeField(null=True, blank=True)
+    submitted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='submitted_tasks',
+    )
+    submitted_at = models.DateTimeField(null=True, blank=True)
+
+    def is_terminal(self):
+        return self.status in ('completed', 'failed')
 
     def is_overdue(self):
-        return self.status not in ('completed', 'failed') and timezone.now() > self.due_date
+        return not self.is_terminal() and timezone.now() > self.due_date
 
     def priority_label(self):
         if self.rank > 600:

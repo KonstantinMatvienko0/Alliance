@@ -11,7 +11,7 @@ from tasks.services.recommendations import (
     recommend_workers_for_task,
     score_worker_for_task,
 )
-from tasks.services.task_completion import apply_task_outcome
+from tasks.services.task_completion import apply_task_outcome, submit_task_for_review
 
 
 class RecommendationTests(TestCase):
@@ -52,6 +52,9 @@ class RecommendationTests(TestCase):
             assigned_to=self.worker,
             created_by=self.manager,
         )
+        task.status = 'in_progress'
+        task.save(update_fields=['status'])
+        submit_task_for_review(task, self.worker)
         apply_task_outcome(task, success=True, completed_by=self.manager)
         self.worker.refresh_from_db()
         self.assertEqual(self.worker.solo_tasks_completed, 1)

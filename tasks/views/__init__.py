@@ -12,6 +12,7 @@ from .tasks import (
     delete_task,
     manager_complete_task,
     manager_tasks,
+    review_task,
     start_task,
 )
 from .teams import (
@@ -35,6 +36,7 @@ __all__ = [
     'start_task',
     'complete_task',
     'manager_complete_task',
+    'review_task',
     'delete_task',
     'worker_team',
     'worker_team_detail',

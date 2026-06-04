@@ -1,4 +1,4 @@
-from django.contrib import messages
+from django.conf import settings
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
@@ -10,16 +10,26 @@ from .models import Skill, User, UserSkill
 
 
 def register(request):
-    """Регистрация нового пользователя (роль worker назначается автоматически)."""
+    """Регистрация: работник по умолчанию; менеджер — с кодом MANAGER_REGISTRATION_CODE."""
+    manager_signup_enabled = bool(getattr(settings, 'MANAGER_REGISTRATION_CODE', ''))
     if request.method == 'POST':
-        form = CustomUserCreationForm(request.POST)
+        form = CustomUserCreationForm(
+            request.POST,
+            manager_signup_enabled=manager_signup_enabled,
+        )
         if form.is_valid():
             user = form.save()
             login(request, user)
             return redirect('dashboard')
     else:
-        form = CustomUserCreationForm()
-    return render(request, 'accounts/register.html', {'form': form})
+        form = CustomUserCreationForm(manager_signup_enabled=manager_signup_enabled)
+    show_manager_code_hint = manager_signup_enabled and settings.DEBUG
+    return render(request, 'accounts/register.html', {
+        'form': form,
+        'manager_signup_enabled': manager_signup_enabled,
+        'show_manager_code_hint': show_manager_code_hint,
+        'manager_invite_hint': settings.MANAGER_REGISTRATION_CODE if show_manager_code_hint else '',
+    })
 
 
 @login_required
@@ -27,7 +37,6 @@ def edit_profile(request, username):
     """Редактирование профиля работника (сам работник или менеджер)."""
     worker = get_object_or_404(User, username=username, role='worker')
     if request.user != worker and request.user.role != 'manager':
-        messages.error(request, 'У вас нет прав для редактирования этого профиля')
         return redirect('worker_profile', username=username)
 
     if request.method == 'POST':
@@ -54,7 +63,6 @@ def edit_skills(request, username):
                 user_skill, _created = UserSkill.objects.get_or_create(user=worker, skill=skill)
                 user_skill.value = value
                 user_skill.save()
-            messages.success(request, f'Навыки для {worker.username} обновлены')
             return redirect('worker_profile', username=username)
     else:
         form = UserSkillsForm(worker)

@@ -284,6 +284,54 @@
     color: #fecaca;
 }
 
+.tdm-foot--review {
+    justify-content: stretch;
+    gap: 0.65rem;
+}
+
+.tdm-foot--review .tdm-foot__btn {
+    flex: 1;
+    min-width: calc(50% - 0.35rem);
+    min-height: 40px;
+    font-size: 0.875rem;
+}
+
+.tdm-foot--review .tdm-foot__btn--danger-text {
+    flex: 0 0 auto;
+    width: 100%;
+    margin-top: 0.15rem;
+    border: none;
+    color: #fca5a5;
+}
+
+.tdm-foot--review .tdm-foot__btn--danger-text:hover {
+    background: rgba(248, 113, 113, 0.1);
+}
+
+.tdm-head__status--pending_review i {
+    color: #60a5fa;
+}
+
+.tdm-review-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    margin-bottom: 0.85rem;
+    padding: 0.65rem 0.75rem;
+    border-radius: var(--wa-radius);
+    border: 1px solid rgba(96, 165, 250, 0.35);
+    background: rgba(96, 165, 250, 0.08);
+    font-size: 0.8125rem;
+    line-height: 1.45;
+    color: #bfdbfe;
+}
+
+.tdm-review-banner i {
+    margin-top: 0.1rem;
+    color: #60a5fa;
+    flex-shrink: 0;
+}
+
 .wa-table .wa-task-row--openable {
     cursor: pointer;
 }

@@ -78,8 +78,10 @@
                         {% elif task.status == 'in_progress' %}
                         <form action="{% url 'complete_task' task.id %}" method="post">
                             {% csrf_token %}
-                            <button type="submit" class="wh-btn wh-btn--ghost">Завершить</button>
+                            <button type="submit" class="wh-btn wh-btn--ghost">На проверку</button>
                         </form>
+                        {% elif task.status == 'pending_review' %}
+                        <span class="wh-task-item__badge">Ожидает проверки</span>
                         {% endif %}
                     </div>
                 </li>

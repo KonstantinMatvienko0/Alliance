@@ -1,4 +1,3 @@
-from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
@@ -9,7 +8,7 @@ from ..decorators import manager_required
 from ..forms import TaskForm
 from ..models import Task, Team
 from ..querysets import worker_can_access_task
-from ..services.task_completion import apply_task_outcome
+from ..services.task_completion import apply_task_outcome, submit_task_for_review
 
 from ..task_detail import tasks_detail_map_from_page
 
@@ -81,6 +80,7 @@ def manager_tasks(request):
         'prefill_worker': prefill_worker,
         'prefill_team': prefill_team,
         'tasks_detail_map': tasks_detail_map_from_page(ctx['page_obj'], request),
+        'page_ctx': {'manager_view': True},
     })
     return render(request, 'tasks/manager_tasks.html', ctx)
 
@@ -90,42 +90,53 @@ def manager_tasks(request):
 def start_task(request, pk):
     task = get_object_or_404(Task, pk=pk)
     if not worker_can_access_task(request.user, task):
-        messages.error(request, 'Вы не можете взять эту задачу')
         return redirect('dashboard')
     if task.status != 'open':
-        messages.error(request, 'Задачу можно взять в работу только из статуса «Открыта»')
         return redirect('dashboard')
     task.status = 'in_progress'
     task.save(update_fields=['status'])
-    messages.success(request, f'Задача «{task.title}» в работе')
     return redirect('dashboard')
 
 
 @login_required
 @require_POST
 def complete_task(request, pk):
+    """Работник отправляет задачу на проверку менеджеру (без начисления рейтинга)."""
     task = get_object_or_404(Task, pk=pk)
     if not worker_can_access_task(request.user, task):
-        messages.error(request, 'Вы не можете завершить эту задачу')
         return redirect('dashboard')
-    if task.status in ('completed', 'failed'):
+    if task.status != 'in_progress':
         return redirect('dashboard')
 
-    success = not task.is_overdue()
-    apply_task_outcome(task, success, completed_by=request.user)
+    submit_task_for_review(task, request.user)
     return redirect('dashboard')
 
 
 @require_POST
 @manager_required
-def manager_complete_task(request, pk):
+def review_task(request, pk):
+    """Менеджер принимает или отклоняет выполнение — после этого начисляется рейтинг."""
     task = get_object_or_404(Task, pk=pk)
-    if task.status in ('completed', 'failed'):
+    if task.status != 'pending_review':
         return redirect('manager_tasks')
 
+    action = request.POST.get('action', '')
+    if action not in ('approve', 'reject'):
+        return redirect('manager_tasks')
+
+    success = action == 'approve'
+    apply_task_outcome(task, success, completed_by=request.user)
+    return redirect('manager_tasks')
+
+
+@require_POST
+@manager_required
+def manager_complete_task(request, pk):
+    """Совместимость со старыми ссылками (success=true/false → approve/reject)."""
+    task = get_object_or_404(Task, pk=pk)
+    if task.status != 'pending_review':
+        return redirect('manager_tasks')
     success = request.POST.get('success', 'true').lower() == 'true'
-    if task.is_overdue():
-        success = False
     apply_task_outcome(task, success, completed_by=request.user)
     return redirect('manager_tasks')
 

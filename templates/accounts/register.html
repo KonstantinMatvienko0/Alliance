@@ -3,6 +3,62 @@
 
 {% block title %}Регистрация — Alliance{% endblock %}
 
+{% block extra_head %}
+<style>
+.auth-role {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+}
+.auth-role__label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--auth-text);
+}
+.auth-role-options {
+    display: flex;
+    gap: 0.5rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.auth-role-options li {
+    flex: 1;
+    margin: 0;
+}
+.auth-role-options label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    padding: 0.55rem 0.75rem;
+    border: 1px solid #3f3f46;
+    border-radius: var(--auth-radius-control);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--auth-muted);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.auth-role-options input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+.auth-role-options input:checked + label,
+.auth-role-options label:has(input:checked) {
+    border-color: var(--auth-accent);
+    color: var(--auth-accent);
+    background: rgba(193, 255, 114, 0.08);
+}
+.auth-manager-code[hidden] {
+    display: none !important;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="auth-shell">
     <header class="auth-brand">
@@ -12,14 +68,50 @@
 
     <div class="auth-card">
         <h2 class="auth-card__title">Регистрация</h2>
-        <p class="auth-card__subtitle">Создайте аккаунт работника</p>
+        <p class="auth-card__subtitle" id="auth-register-subtitle">
+            {% if manager_signup_enabled %}Выберите роль и заполните данные{% else %}Создайте аккаунт работника{% endif %}
+        </p>
 
         {% if form.non_field_errors %}
         <div class="auth-form-errors">{{ form.non_field_errors }}</div>
         {% endif %}
 
-        <form method="post" class="auth-form" novalidate>
+        <form method="post" class="auth-form" novalidate id="auth-register-form">
             {% csrf_token %}
+
+            {% if manager_signup_enabled %}
+            <div class="auth-role">
+                <span class="auth-role__label">Роль</span>
+                <ul class="auth-role-options">
+                    {% for radio in form.role %}
+                    <li>{{ radio.tag }}<label for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label></li>
+                    {% endfor %}
+                </ul>
+                {% for error in form.role.errors %}
+                <p class="auth-field__error">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+            <div class="auth-field auth-manager-code" id="auth-manager-code-wrap" hidden>
+                <label class="auth-field__label" for="id_manager_invite_code">Код приглашения</label>
+                <input
+                    type="text"
+                    name="manager_invite_code"
+                    id="id_manager_invite_code"
+                    class="auth-input{% if form.manager_invite_code.errors %} auth-input--error{% endif %}"
+                    placeholder="Введите код менеджера"
+                    autocomplete="off"
+                    value="{{ form.manager_invite_code.value|default:'' }}"
+                >
+                <p class="auth-field__hint">Нужен только при регистрации менеджера</p>
+                {% if show_manager_code_hint %}
+                <p class="auth-field__hint">Код для разработки: <strong>{{ manager_invite_hint }}</strong></p>
+                {% endif %}
+                {% for error in form.manager_invite_code.errors %}
+                <p class="auth-field__error">{{ error }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
 
             <div class="auth-field">
                 <label class="auth-field__label" for="id_username">Имя пользователя</label>
@@ -96,4 +188,33 @@
         </p>
     </div>
 </div>
+
+{% if manager_signup_enabled %}
+<script>
+(function () {
+    const wrap = document.getElementById('auth-manager-code-wrap');
+    const codeInput = document.getElementById('id_manager_invite_code');
+    if (!wrap) return;
+
+    function selectedRole() {
+        const checked = document.querySelector('input[name="role"]:checked');
+        return checked ? checked.value : 'worker';
+    }
+
+    function update() {
+        const isManager = selectedRole() === 'manager';
+        wrap.hidden = !isManager;
+        if (codeInput) {
+            codeInput.required = isManager;
+            if (!isManager) codeInput.value = '';
+        }
+    }
+
+    document.querySelectorAll('input[name="role"]').forEach(function (el) {
+        el.addEventListener('change', update);
+    });
+    update();
+})();
+</script>
+{% endif %}
 {% endblock %}

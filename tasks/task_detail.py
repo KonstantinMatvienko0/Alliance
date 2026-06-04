@@ -44,6 +44,11 @@ def build_task_detail_payload(task, request=None, *, worker_rating_change=None, 
             (task.completed_by.full_name or task.completed_by.username)
             if task.completed_by_id else ''
         ),
+        'submitted_by': (
+            (task.submitted_by.full_name or task.submitted_by.username)
+            if task.submitted_by_id else ''
+        ),
+        'submitted_at': _fmt_dt(task.submitted_at),
         'is_overdue': task.is_overdue(),
     }
     if worker_rating_change is not None:
@@ -53,18 +58,21 @@ def build_task_detail_payload(task, request=None, *, worker_rating_change=None, 
     if request is not None:
         payload['csrf'] = get_token(request)
         is_manager = getattr(request.user, 'role', None) == 'manager'
+        payload['is_manager'] = is_manager
         if is_manager:
             if task.status in ('open', 'in_progress'):
                 payload['edit_url'] = reverse('manager_tasks') + f'?edit={task.pk}'
-            if task.status not in ('completed', 'failed'):
-                payload['manager_complete_url'] = reverse(
-                    'manager_complete_task', args=[task.pk],
-                )
+            if task.status == 'pending_review':
+                review_url = reverse('review_task', args=[task.pk])
+                payload['can_review'] = True
+                payload['review_approve_url'] = review_url
+                payload['review_reject_url'] = review_url
+            if not task.is_terminal():
                 payload['delete_url'] = reverse('delete_task', args=[task.pk])
         else:
             if task.status == 'open':
                 payload['start_url'] = reverse('start_task', args=[task.pk])
-            if task.status in ('open', 'in_progress'):
+            if task.status == 'in_progress':
                 payload['complete_url'] = reverse('complete_task', args=[task.pk])
     return payload
 

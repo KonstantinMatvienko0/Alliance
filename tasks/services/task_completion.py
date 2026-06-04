@@ -3,26 +3,33 @@ from django.utils import timezone
 
 from tasks.models import Task
 from tasks.services.performance_metrics import refresh_after_task_outcome
+from tasks.services.rating import get_rating_recipients, split_rating_shares
 
 
-def get_rating_recipients(task):
-    """Пользователи, которым начисляется или снимается рейтинг."""
-    if task.assigned_to_id:
-        return [task.assigned_to]
-    if task.team_id:
-        return list(task.team.members.filter(role='worker'))
-    return []
+@transaction.atomic
+def submit_task_for_review(task, submitted_by):
+    """
+    Работник отправляет задачу на проверку менеджеру. Рейтинг не меняется.
+    """
+    task = Task.objects.select_for_update().get(pk=task.pk)
+    if task.status != 'in_progress':
+        return None
+    task.status = 'pending_review'
+    task.submitted_by = submitted_by
+    task.submitted_at = timezone.now()
+    task.save(update_fields=['status', 'submitted_by', 'submitted_at'])
+    return task
 
 
 @transaction.atomic
 def apply_task_outcome(task, success, completed_by=None):
     """
-    Завершает задачу и меняет рейтинг исполнителям.
-    Возвращает dict с деталями или None, если задача уже закрыта.
+    Менеджер принимает или отклоняет выполнение. Рейтинг начисляется здесь.
+    Задача должна быть в статусе «На проверке».
     """
     task = Task.objects.select_for_update().get(pk=task.pk)
 
-    if task.status in ('completed', 'failed'):
+    if task.status != 'pending_review':
         return None
 
     recipients = get_rating_recipients(task)
@@ -30,10 +37,9 @@ def apply_task_outcome(task, success, completed_by=None):
     sign = 1 if success else -1
 
     if recipients:
-        quotient, remainder = divmod(amount, len(recipients))
-        for index, user in enumerate(recipients):
-            change = sign * (quotient + (remainder if index == 0 else 0))
-            user.rating = max(0, user.rating + change)
+        shares = split_rating_shares(amount, len(recipients))
+        for user, share in zip(recipients, shares):
+            user.rating = max(0, user.rating + sign * share)
             user.save(update_fields=['rating'])
 
     task.status = 'completed' if success else 'failed'
@@ -58,36 +64,36 @@ def format_outcome_message(result):
     closer = result.get('completed_by')
 
     closer_note = ''
-    if closer and len(recipients) > 1:
-        closer_note = f' Закрыл: {closer.username}.'
+    if closer:
+        closer_note = f' Проверил: {closer.username}.'
 
     if result['success']:
         if len(recipients) == 1:
             user = recipients[0]
             return (
-                f'✅ Задача «{task.title}» выполнена! '
-                f'Рейтинг {user.username} изменён на +{amount}.{closer_note}'
+                f'Задача «{task.title}» принята. '
+                f'Рейтинг {user.username}: +{amount}.{closer_note}'
             )
         if recipients:
             names = ', '.join(u.username for u in recipients)
             per_user, _ = divmod(amount, len(recipients))
             return (
-                f'✅ Задача «{task.title}» выполнена! '
+                f'Задача «{task.title}» принята. '
                 f'Рейтинг команды ({names}): +{per_user} каждому.{closer_note}'
             )
-        return f'✅ Задача «{task.title}» выполнена (исполнители не назначены).'
+        return f'Задача «{task.title}» принята (исполнители не назначены).'
 
     if len(recipients) == 1:
         user = recipients[0]
         return (
-            f'❌ Задача «{task.title}» провалена! '
-            f'Рейтинг {user.username} снижен на {amount}.{closer_note}'
+            f'Задача «{task.title}» отклонена. '
+            f'Рейтинг {user.username}: −{amount}.{closer_note}'
         )
     if recipients:
         names = ', '.join(u.username for u in recipients)
         per_user, _ = divmod(amount, len(recipients))
         return (
-            f'❌ Задача «{task.title}» провалена! '
+            f'Задача «{task.title}» отклонена. '
             f'Рейтинг команды ({names}): −{per_user} каждому.{closer_note}'
         )
-    return f'❌ Задача «{task.title}» провалена (исполнители не назначены).'
+    return f'Задача «{task.title}» отклонена (исполнители не назначены).'
